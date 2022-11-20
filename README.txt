@@ -44,4 +44,4 @@ We recommend that you start your implementation with:
 - implement the I/O redirection and the pipes
 - Finally implement the bonus command.
 
-Good luck :)
+Good fucking luck :)
