@@ -1,0 +1,1 @@
+/usr/bin/g++ -g CMakeFiles/skeleton_smash.dir/smash.cpp.o CMakeFiles/skeleton_smash.dir/Commands.cpp.o CMakeFiles/skeleton_smash.dir/signals.cpp.o -o skeleton_smash 
