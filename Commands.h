@@ -2,6 +2,11 @@
 #define SMASH_COMMAND_H_
 
 #include <vector>
+#include <string>
+#include <memory>
+using std::shared_ptr;
+using std::string;
+using std::vector;
 
 #define COMMAND_ARGS_MAX_LENGTH (200)
 #define COMMAND_MAX_ARGS (20)
@@ -39,6 +44,17 @@ class PipeCommand : public Command
 public:
   PipeCommand(const char *cmd_line);
   virtual ~PipeCommand() {}
+  void execute() override;
+};
+
+class ChpromptCommand : public BuiltInCommand
+{
+private:
+  string _newPrompt;
+
+public:
+  explicit ChpromptCommand(vector<string> args);
+  virtual ~ChpromptCommand() {}
   void execute() override;
 };
 
@@ -180,10 +196,11 @@ class SmallShell
 {
 private:
   // TODO: Add your data members
+  string _prompt;
   SmallShell();
 
 public:
-  Command *CreateCommand(const char *cmd_line);
+  shared_ptr<Command> CreateCommand(const char *cmd_line);
   SmallShell(SmallShell const &) = delete;     // disable copy ctor
   void operator=(SmallShell const &) = delete; // disable = operator
   static SmallShell &getInstance()             // make SmallShell singleton
@@ -195,6 +212,14 @@ public:
   ~SmallShell();
   void executeCommand(const char *cmd_line);
   // TODO: add extra methods as needed
+  string &getPrompt();
+  vector<string> convertToVector(const char *cmd_line);
 };
 
+class CommandException : public std::exception
+{
+};
+class InvalidCommand : public CommandException
+{
+};
 #endif // SMASH_COMMAND_H_

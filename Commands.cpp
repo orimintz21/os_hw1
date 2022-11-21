@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <sstream>
+#include <memory>
 #include <sys/wait.h>
 #include <iomanip>
 #include "Commands.h"
@@ -85,7 +86,7 @@ void _removeBackgroundSign(char *cmd_line)
 
 // TODO: Add your implementation for classes in Commands.h
 
-SmallShell::SmallShell()
+SmallShell::SmallShell() : _prompt("smash")
 {
   // TODO: add your implementation
 }
@@ -98,8 +99,18 @@ SmallShell::~SmallShell()
 /**
  * Creates and returns a pointer to Command class which matches the given command line (cmd_line)
  */
-Command *SmallShell::CreateCommand(const char *cmd_line)
+shared_ptr<Command> SmallShell::CreateCommand(const char *cmd_line)
 {
+  vector<string> args = convertToVector(cmd_line);
+  if (args.size() == 0)
+  {
+    return nullptr;
+  }
+  string commend = args[0];
+  if (commend == "chprompt")
+  {
+    return make_shared<ChpromptCommand>(args);
+  }
   // For example:
   /*
     string cmd_s = _trim(string(cmd_line));
@@ -127,4 +138,35 @@ void SmallShell::executeCommand(const char *cmd_line)
   // Command* cmd = CreateCommand(cmd_line);
   // cmd->execute();
   // Please note that you must fork smash process for some commands (e.g., external commands....)
+}
+
+string &SmallShell::getPrompt()
+{
+  return _prompt;
+}
+
+vector<string> convertToVector(const char *cmd_line)
+{
+  vector<string> vec;
+  string str = cmd_line;
+  stringstream ss(str);
+  string word;
+  while (ss >> word)
+  {
+    vec.push_back(word);
+  }
+
+  return vec;
+}
+
+ChpromptCommand::ChpromptCommand(vector<string> args)
+{
+  if (args.size() == 1)
+  {
+    _newPrompt = "smash";
+  }
+  else
+  {
+    _newPrompt = args[1];
+  }
 }
