@@ -88,6 +88,7 @@ public:
 class ShowPidCommand : public BuiltInCommand
 {
 public:
+  pid_t _newPid;
   ShowPidCommand(vector<string> args);
   virtual ~ShowPidCommand() {}
   void execute() override;

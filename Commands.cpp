@@ -107,43 +107,47 @@ shared_ptr<Command> SmallShell::CreateCommand(const char *cmd_line)
     return nullptr;
   }
   string commend = args[0];
-  switch (commend)
-  {
-  case "chprompt":
-    return make_shared<ChpromptCommand>(args);
-    break;
-  case "showpid":
-    return make_shared<ShowpidCommand>(args);
-    break;
-  case "pwd":
-    return make_shared<PwdCommand>(args);
-    break;
-  case "cd":
-    return make_shared<CdCommand>(args);
-    break;
-  case "jobs":
-    return make_shared<JobsCommand>(args);
-    break;
-  case "fg":
-    return make_shared<FgCommand>(args);
-    break;
-  case "bg":
-    return make_shared<BgCommand>(args);
-    break;
-  case "quit":
-    return make_shared<QuitCommand>(args);
-    break;
-  case "kill":
-    return make_shared<KillCommand>(args);
-    break;
 
-  default:
-    break;
+  if (commend == "chprompt")
+  {
+    return make_shared<ChpromptCommand>(args);
   }
-  // if (commend == "chprompt")
-  // {
-  //   return make_shared<ChpromptCommand>(args);
-  // }
+  else if (commend == "showpid")
+  {
+    return make_shared<ShowPidCommand>(args);
+  }
+  else if (commend == "pwd")
+  {
+    return make_shared<PwdCommand>(args);
+  }
+  else if (commend == "cd")
+  {
+    return make_shared<CdCommand>(args);
+  }
+  else if (commend == "jobs")
+  {
+    return make_shared<JobsCommand>(args);
+  }
+  else if (commend == "fg")
+  {
+    return make_shared<FgCommand>(args);
+  }
+  else if (commend == "bg")
+  {
+    return make_shared<BackgroundCommand>(args);
+  }
+  else if (commend == "quit")
+  {
+    return make_shared<QuitCommand>(args);
+  }
+  else if (commend == "kill")
+  {
+    return make_shared<KillCommand>(args);
+  }
+  else
+  {
+    return make_shared(ExternalCommand(cmd_line));
+  }
 
   // For example:
   /*
@@ -169,8 +173,8 @@ void SmallShell::executeCommand(const char *cmd_line)
 {
   // TODO: Add your implementation here
   // for example:
-  // Command* cmd = CreateCommand(cmd_line);
-  // cmd->execute();
+  shared_ptr<Command> cmd = CreateCommand(cmd_line);
+  cmd->execute();
   // Please note that you must fork smash process for some commands (e.g., external commands....)
 }
 
@@ -179,7 +183,7 @@ string &SmallShell::getPrompt()
   return _prompt;
 }
 
-vector<string> convertToVector(const char *cmd_line)
+vector<string> SmallShell::convertToVector(const char *cmd_line)
 {
   vector<string> vec;
   string str = cmd_line;
@@ -203,5 +207,17 @@ ChpromptCommand::ChpromptCommand(vector<string> args)
   {
     _newPrompt = args[1];
   }
-  SmallShell::getInstance->setPrompt(_newPrompt);
+}
+
+ChpromptCommand::execute()
+{
+  SmallShell::getInstance().setPrompt(_newPrompt);
+}
+ShowPidCommand::ShowPidCommand(vector<string> args)
+{
+  _newPid = getpid();
+}
+ShowPidCommand::execute()
+{
+  std::cout << int(_newPid);
 }
