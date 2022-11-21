@@ -109,42 +109,42 @@ shared_ptr<Command> SmallShell::CreateCommand(const char *cmd_line)
   string commend = args[0];
   switch (commend)
   {
-    case "chprompt":
-      return make_shared<ChpromptCommand>(args);
-      break;
-    case "showpid":
-      return make_shared<ShowpidCommand>(args);
-      break;
-    case "pwd":
-      return make_shared<PwdCommand>(args);
-      break;
-    case "cd":
-      return make_shared<CdCommand>(args);
-      break;
-    case "jobs":
-      return make_shared<JobsCommand>(args);
-      break;
-    case "fg":
-      return make_shared<FgCommand>(args);
-      break;
-    case "bg":
-      return make_shared<BgCommand>(args);
-      break;
-    case "quit":
-      return make_shared<QuitCommand>(args);
-      break;
-    case "kill":
-      return make_shared<KillCommand>(args);
-      break;
-  
-    default:
-      break;
+  case "chprompt":
+    return make_shared<ChpromptCommand>(args);
+    break;
+  case "showpid":
+    return make_shared<ShowpidCommand>(args);
+    break;
+  case "pwd":
+    return make_shared<PwdCommand>(args);
+    break;
+  case "cd":
+    return make_shared<CdCommand>(args);
+    break;
+  case "jobs":
+    return make_shared<JobsCommand>(args);
+    break;
+  case "fg":
+    return make_shared<FgCommand>(args);
+    break;
+  case "bg":
+    return make_shared<BgCommand>(args);
+    break;
+  case "quit":
+    return make_shared<QuitCommand>(args);
+    break;
+  case "kill":
+    return make_shared<KillCommand>(args);
+    break;
+
+  default:
+    break;
   }
   // if (commend == "chprompt")
   // {
   //   return make_shared<ChpromptCommand>(args);
   // }
-  
+
   // For example:
   /*
     string cmd_s = _trim(string(cmd_line));
@@ -203,4 +203,5 @@ ChpromptCommand::ChpromptCommand(vector<string> args)
   {
     _newPrompt = args[1];
   }
+  SmallShell::getInstance->setPrompt(_newPrompt);
 }

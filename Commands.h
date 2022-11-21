@@ -14,7 +14,6 @@ using std::vector;
 class Command
 {
   // TODO: Add your data members
-  int _pid; //almog
 public:
   Command(const char *cmd_line);
   virtual ~Command();
@@ -222,7 +221,20 @@ public:
 class CommandException : public std::exception
 {
 };
-class InvalidCommand : public CommandException
+class TooManyArguments : public CommandException
 {
+public:
+  const char *what() const noexcept
+  {
+    return "smash error: cd: too many arguments";
+  }
+};
+class OldPwdNotSet : public CommandException
+{
+public:
+  const char *what() const noexcept
+  {
+    return "smash error: cd: OLDPWD not set";
+  }
 };
 #endif // SMASH_COMMAND_H_
