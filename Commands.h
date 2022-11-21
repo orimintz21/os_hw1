@@ -14,6 +14,7 @@ using std::vector;
 class Command
 {
   // TODO: Add your data members
+  int _pid; //almog
 public:
   Command(const char *cmd_line);
   virtual ~Command();
@@ -88,7 +89,7 @@ public:
 class ShowPidCommand : public BuiltInCommand
 {
 public:
-  ShowPidCommand(const char *cmd_line);
+  ShowPidCommand(vector<string> args);
   virtual ~ShowPidCommand() {}
   void execute() override;
 };
@@ -197,6 +198,7 @@ class SmallShell
 private:
   // TODO: Add your data members
   string _prompt;
+  int _frontPid;
   SmallShell();
 
 public:
@@ -213,6 +215,7 @@ public:
   void executeCommand(const char *cmd_line);
   // TODO: add extra methods as needed
   string &getPrompt();
+  void setPrompt(string newPrompt);
   vector<string> convertToVector(const char *cmd_line);
 };
 
