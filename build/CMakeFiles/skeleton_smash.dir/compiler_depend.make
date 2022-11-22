@@ -242,7 +242,12 @@ CMakeFiles/skeleton_smash.dir/Commands.cpp.o: /home/orimintz21/os/hw1/skeleton_s
   /usr/include/c++/9/bits/locale_facets_nonio.tcc \
   /usr/include/c++/9/bits/locale_conv.h \
   /usr/include/c++/9/bits/quoted_string.h \
-  /home/orimintz21/os/hw1/skeleton_smash/Commands.h
+  /home/orimintz21/os/hw1/skeleton_smash/Commands.h \
+  /usr/include/c++/9/map \
+  /usr/include/c++/9/bits/stl_tree.h \
+  /usr/include/c++/9/bits/stl_map.h \
+  /usr/include/c++/9/bits/stl_multimap.h \
+  /usr/include/c++/9/bits/erase_if.h
 
 CMakeFiles/skeleton_smash.dir/signals.cpp.o: /home/orimintz21/os/hw1/skeleton_smash/signals.cpp \
   /usr/include/stdc-predef.h \
@@ -463,7 +468,12 @@ CMakeFiles/skeleton_smash.dir/signals.cpp.o: /home/orimintz21/os/hw1/skeleton_sm
   /usr/include/c++/9/bits/shared_ptr_atomic.h \
   /usr/include/c++/9/bits/atomic_base.h \
   /usr/include/c++/9/bits/atomic_lockfree_defines.h \
-  /usr/include/c++/9/backward/auto_ptr.h
+  /usr/include/c++/9/backward/auto_ptr.h \
+  /usr/include/c++/9/map \
+  /usr/include/c++/9/bits/stl_tree.h \
+  /usr/include/c++/9/bits/stl_map.h \
+  /usr/include/c++/9/bits/stl_multimap.h \
+  /usr/include/c++/9/bits/erase_if.h
 
 CMakeFiles/skeleton_smash.dir/smash.cpp.o: /home/orimintz21/os/hw1/skeleton_smash/smash.cpp \
   /usr/include/stdc-predef.h \
@@ -692,10 +702,17 @@ CMakeFiles/skeleton_smash.dir/smash.cpp.o: /home/orimintz21/os/hw1/skeleton_smas
   /usr/include/c++/9/bits/atomic_base.h \
   /usr/include/c++/9/bits/atomic_lockfree_defines.h \
   /usr/include/c++/9/backward/auto_ptr.h \
+  /usr/include/c++/9/map \
+  /usr/include/c++/9/bits/stl_tree.h \
+  /usr/include/c++/9/bits/stl_map.h \
+  /usr/include/c++/9/bits/stl_multimap.h \
+  /usr/include/c++/9/bits/erase_if.h \
   /home/orimintz21/os/hw1/skeleton_smash/signals.h
 
 
 /home/orimintz21/os/hw1/skeleton_smash/signals.h:
+
+/usr/include/c++/9/map:
 
 /usr/include/c++/9/bits/quoted_string.h:
 
@@ -730,6 +747,8 @@ CMakeFiles/skeleton_smash.dir/smash.cpp.o: /home/orimintz21/os/hw1/skeleton_smas
 /usr/include/x86_64-linux-gnu/bits/types/sig_atomic_t.h:
 
 /usr/include/c++/9/backward/auto_ptr.h:
+
+/usr/include/c++/9/bits/stl_tree.h:
 
 /usr/include/c++/9/bits/atomic_lockfree_defines.h:
 
@@ -993,6 +1012,8 @@ CMakeFiles/skeleton_smash.dir/smash.cpp.o: /home/orimintz21/os/hw1/skeleton_smas
 
 /usr/include/c++/9/new:
 
+/usr/include/c++/9/bits/erase_if.h:
+
 /usr/include/c++/9/bits/vector.tcc:
 
 /usr/include/x86_64-linux-gnu/c++/9/bits/os_defines.h:
@@ -1028,6 +1049,8 @@ CMakeFiles/skeleton_smash.dir/smash.cpp.o: /home/orimintz21/os/hw1/skeleton_smas
 /usr/include/c++/9/bits/invoke.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/9/include/stddef.h:
+
+/usr/include/c++/9/bits/stl_multimap.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h:
 
@@ -1166,6 +1189,8 @@ CMakeFiles/skeleton_smash.dir/smash.cpp.o: /home/orimintz21/os/hw1/skeleton_smas
 /usr/include/x86_64-linux-gnu/bits/locale.h:
 
 /usr/include/c++/9/string:
+
+/usr/include/c++/9/bits/stl_map.h:
 
 /usr/include/c++/9/bits/stl_bvector.h:
 

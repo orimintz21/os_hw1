@@ -193,4 +193,7 @@ CMakeFiles/skeleton_smash.dir/Commands.cpp.o: \
  /usr/include/c++/9/bits/locale_facets_nonio.tcc \
  /usr/include/c++/9/bits/locale_conv.h \
  /usr/include/c++/9/bits/quoted_string.h \
- /home/orimintz21/os/hw1/skeleton_smash/Commands.h
+ /home/orimintz21/os/hw1/skeleton_smash/Commands.h /usr/include/c++/9/map \
+ /usr/include/c++/9/bits/stl_tree.h /usr/include/c++/9/bits/stl_map.h \
+ /usr/include/c++/9/bits/stl_multimap.h \
+ /usr/include/c++/9/bits/erase_if.h

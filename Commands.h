@@ -4,8 +4,12 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <map>
+#include <time.h>
+using std::map;
 using std::shared_ptr;
 using std::string;
+using std::to_string;
 using std::vector;
 
 #define COMMAND_ARGS_MAX_LENGTH (200)
@@ -13,11 +17,18 @@ using std::vector;
 
 class Command
 {
+protected:
   // TODO: Add your data members
+  pid_t _pid;
+  string _cmd_line;
+
 public:
-  Command(const char *cmd_line);
+  Command(pid_t pid, string cmd_line);
+  Command(string _cmd_line);
   virtual ~Command();
   virtual void execute() = 0;
+  virtual pid_t getPid();
+  virtual string getCmdLine();
   // virtual void prepare();
   // virtual void cleanup();
   //  TODO: Add your extra methods if needed
@@ -26,7 +37,7 @@ public:
 class BuiltInCommand : public Command
 {
 public:
-  BuiltInCommand(const char *cmd_line);
+  BuiltInCommand(string cmd_line);
   virtual ~BuiltInCommand() {}
 };
 
@@ -53,6 +64,7 @@ private:
   string _newPrompt;
 
 public:
+  ChpromptCommand(string cmd_line, vector<string> &args);
   explicit ChpromptCommand(vector<string> args);
   virtual ~ChpromptCommand() {}
   void execute() override;
@@ -72,15 +84,19 @@ public:
 class ChangeDirCommand : public BuiltInCommand
 {
   // TODO: Add your data members public:
-  ChangeDirCommand(const char *cmd_line, char **plastPwd);
+  string _dir;
+  ChangeDirCommand(string cmd_line, vector<string> &args);
   virtual ~ChangeDirCommand() {}
   void execute() override;
 };
 
 class GetCurrDirCommand : public BuiltInCommand
 {
+private:
+  string _currentDir;
+
 public:
-  GetCurrDirCommand(const char *cmd_line);
+  GetCurrDirCommand(string cmd_line, vector<string> &args);
   virtual ~GetCurrDirCommand() {}
   void execute() override;
 };
@@ -89,7 +105,7 @@ class ShowPidCommand : public BuiltInCommand
 {
 public:
   pid_t _newPid;
-  ShowPidCommand(vector<string> args);
+  ShowPidCommand(string cmd_line, vector<string> &args);
   virtual ~ShowPidCommand() {}
   void execute() override;
 };
@@ -110,8 +126,23 @@ public:
   class JobEntry
   {
     // TODO: Add your data members
+    int _job_id;
+    pid_t _pid;
+    string _command;
+    bool _isStopped;
+    time_t _start_time;
+
+  public:
+    JobEntry(int job_id, pid_t pid, const string command, bool isStopped);
+    int getJobId() const { return _job_id; }
+    pid_t getPid() const { return _pid; }
+    string getCommand() const { return _command; }
+    bool isStopped() const { return _isStopped; }
+    time_t getStartTime() const { return _start_time; }
   };
   // TODO: Add your data members
+  map<int, JobEntry> _jobs;
+
 public:
   JobsList();
   ~JobsList();
@@ -130,7 +161,7 @@ class JobsCommand : public BuiltInCommand
 {
   // TODO: Add your data members
 public:
-  JobsCommand(const char *cmd_line, JobsList *jobs);
+  JobsCommand(string cmd_line, vector<string> &args);
   virtual ~JobsCommand() {}
   void execute() override;
 };
@@ -138,17 +169,22 @@ public:
 class ForegroundCommand : public BuiltInCommand
 {
   // TODO: Add your data members
+  JobsList::JobEntry *_job;
+  int _job_id;
+
 public:
-  ForegroundCommand(const char *cmd_line, JobsList *jobs);
+  ForegroundCommand(string cmd_line, vector<string> &args);
   virtual ~ForegroundCommand() {}
   void execute() override;
 };
 
 class BackgroundCommand : public BuiltInCommand
 {
+  JobsList::JobEntry *_job;
+  int _job_id;
   // TODO: Add your data members
 public:
-  BackgroundCommand(const char *cmd_line, JobsList *jobs);
+  BackgroundCommand(string cmd_line, vector<string> &args);
   virtual ~BackgroundCommand() {}
   void execute() override;
 };
@@ -198,7 +234,9 @@ class SmallShell
 private:
   // TODO: Add your data members
   string _prompt;
-  int _frontPid;
+  string _preDir;
+  string _currentDir;
+  JobsList _jobsList;
   SmallShell();
 
 public:
@@ -215,8 +253,18 @@ public:
   void executeCommand(const char *cmd_line);
   // TODO: add extra methods as needed
   string &getPrompt();
+  string &getPreDir();
+  string &getCurrentDir();
+  void setPreDir(string &dir);
+  void setCurrentDir(string &dir);
   void setPrompt(string newPrompt);
   vector<string> convertToVector(const char *cmd_line);
+  void goToDir(string &dir);
+  void printJobsList() { _jobsList.printJobsList(); }
+  bool jobsListIsEmpty() const { return _jobsList._jobs.empty(); }
+  JobsList::JobEntry *getLastJobId(int *job_id);
+  JobsList::JobEntry *getJobById(int job_id);
+  void removeJobById(int job_id) { _jobsList.removeJobById(job_id); }
 };
 
 class CommandException : public std::exception
@@ -224,18 +272,108 @@ class CommandException : public std::exception
 };
 class TooManyArguments : public CommandException
 {
+private:
+  string _cmd_line;
+
 public:
+  TooManyArguments(string &cmd) : _cmd_line(cmd) {}
+
   const char *what() const noexcept
   {
-    return "smash error: cd: too many arguments";
+    string ans = "smash error: " + _cmd_line + ": too many arguments";
+    return ans.c_str();
   }
 };
+
+class TooFewArguments : public CommandException
+{
+private:
+  string _cmd_line;
+
+public:
+  TooFewArguments(string &cmd) : _cmd_line(cmd) {}
+  const char *what() const noexcept
+  {
+    string ans = "smash error:> " + _cmd_line;
+    return ans.c_str();
+  }
+};
+
 class OldPwdNotSet : public CommandException
 {
+private:
+  string _cmd_line;
+
 public:
+  OldPwdNotSet(string &cmd) : _cmd_line(cmd) {}
   const char *what() const noexcept
   {
-    return "smash error: cd: OLDPWD not set";
+    string ans = "smash error: " + _cmd_line + ": OLDPWD not set";
+    return ans.c_str();
   }
 };
+
+class DirDoesNotExist : public CommandException
+{
+};
+
+class JobsListIsEmpty : public CommandException
+{
+private:
+  string _cmd_line;
+
+public:
+  JobsListIsEmpty(string &cmd) : _cmd_line(cmd) {}
+  const char *what() const noexcept
+  {
+    string ans = "smash error: " + _cmd_line + ": jobs list is empty";
+    return ans.c_str();
+  }
+};
+
+class InvalidArguments : public CommandException
+{
+private:
+  string _cmd_line;
+
+public:
+  InvalidArguments(string &cmd) : _cmd_line(cmd) {}
+  const char *what() const noexcept
+  {
+    string ans = "smash error: " + _cmd_line + ": invalid arguments";
+    return ans.c_str();
+  }
+};
+
+class JobDoesNotExist : public CommandException
+{
+private:
+  string _cmd_line;
+  int _job_id;
+
+public:
+  JobDoesNotExist(string cmd, int job_id) : _cmd_line(cmd), _job_id(job_id) {}
+  const char *what() const noexcept
+  {
+    string ans = "smash error: " + _cmd_line + ": job-id " + to_string(_job_id) + " does not exist";
+    return ans.c_str();
+  }
+};
+
+class AlreadyRunningInBackground : public CommandException
+{
+private:
+  string _cmd_line;
+  int _job_id;
+
+public:
+  AlreadyRunningInBackground(string cmd, int job_id) : _cmd_line(cmd), _job_id(job_id) {}
+
+  const char *what() const noexcept
+  {
+    string ans = "smash error: " + _cmd_line + ": job-id " + to_string(_job_id) + " is already running in the background";
+    return ans.c_str();
+  }
+};
+
 #endif // SMASH_COMMAND_H_

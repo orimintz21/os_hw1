@@ -4,7 +4,14 @@
     "iostream": "cpp",
     "iosfwd": "cpp",
     "string": "cpp",
-    "*.tcc": "cpp"
+    "*.tcc": "cpp",
+    "new": "cpp",
+    "vector": "cpp",
+    "array": "cpp",
+    "any": "cpp",
+    "string_view": "cpp",
+    "regex": "cpp",
+    "complex": "cpp"
   },
   "C_Cpp.errorSquiggles": "Disabled",
   "C_Cpp_Runner.cCompilerPath": "gcc",
