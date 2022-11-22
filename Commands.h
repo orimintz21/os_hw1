@@ -114,8 +114,11 @@ class JobsList;
 class QuitCommand : public BuiltInCommand
 {
   // TODO: Add your data members
+  string _cmd_line;
+  bool killAll;
+
 public:
-  QuitCommand(const char *cmd_line, JobsList *jobs);
+  QuitCommand(string cmd_line, vector<string> &args);
   virtual ~QuitCommand() {}
   void execute() override;
 };
@@ -265,6 +268,7 @@ public:
   JobsList::JobEntry *getLastJobId(int *job_id);
   JobsList::JobEntry *getJobById(int job_id);
   void removeJobById(int job_id) { _jobsList.removeJobById(job_id); }
+  void killAllJobs() { _jobsList.killAllJobs(); }
 };
 
 class CommandException : public std::exception

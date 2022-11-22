@@ -137,8 +137,10 @@ void JobsList::printJobsList()
 
 void JobsList::killAllJobs()
 {
+  cout << "smash: sending SIGKILL signal to " << _jobs.size() << " jobs:" << endl;
   for (auto cm : _jobs)
   {
+    cout << cm.second.getPid() << ": " << cm.second.getCommand() << endl;
     kill(cm.second.getPid(), SIGKILL);
   }
   removeFinishedJobs();
@@ -525,4 +527,24 @@ void BackgroundCommand::execute()
 {
   std::cout << _cmd_line << ":" << to_string(_job->getPid()) << endl;
   kill(_job->getPid(), SIGCONT);
+}
+
+quitCommand::quitCommand(string cmd_line, vector<string> &args) : BuiltInCommand(cmd_line), _kill(false)
+{
+  if (args.size() > 1)
+  {
+    if (args[1] == "kill")
+    {
+      _kill = true;
+    }
+  }
+}
+
+void quitCommand::execute()
+{
+  if (_kill)
+  {
+    SmallShell::getInstance().killAllJobs();
+  }
+  exit(0);
 }
