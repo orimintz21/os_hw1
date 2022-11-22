@@ -7,6 +7,7 @@
 #include <sys/wait.h>
 #include <iomanip>
 #include "Commands.h"
+#include <signal.h>
 
 using namespace std;
 
@@ -490,11 +491,10 @@ BackgroundCommand::BackgroundCommand(string cmd_line, vector<string> &args) : Bu
 
   if (args.size() == 1)
   {
-    _job = SmallShell::getInstance().getLastStoppedJob();
-    _job_id = SmallShell::getInstance().getLastStoppedJob()->first;
+    _job = SmallShell::getInstance().getLastStoppedJob(&(_job_id));
     if (!_job)
     {
-      throw // there is no stop jobs to resume
+      throw ;// there is no stop jobs to resume;
     }
   }
   else if (args.size() == 2)
@@ -507,12 +507,12 @@ BackgroundCommand::BackgroundCommand(string cmd_line, vector<string> &args) : Bu
       }
     }
     _job_id = stoi(args[1]);
-    _job = SmallShell::getInstance().removeJobById(_job_id);
+    _job = SmallShell::getInstance().getJobById(_job_id);
     if (!_job)
     {
-      throw JobDoesNotExist(args[0], _job_id)
+      throw JobDoesNotExist(args[0], _job_id);
     }
-    else if (!_job->isStopped)
+    else if (!_job->isStopped())
     {
       throw AlreadyRunningInBackground(args[0], _job_id);
     }
@@ -529,7 +529,7 @@ void BackgroundCommand::execute()
   kill(_job->getPid(), SIGCONT);
 }
 
-quitCommand::quitCommand(string cmd_line, vector<string> &args) : BuiltInCommand(cmd_line), _kill(false)
+QuitCommand::QuitCommand(string cmd_line, vector<string> &args) : BuiltInCommand(cmd_line), _kill(false)
 {
   if (args.size() > 1)
   {
@@ -540,7 +540,7 @@ quitCommand::quitCommand(string cmd_line, vector<string> &args) : BuiltInCommand
   }
 }
 
-void quitCommand::execute()
+void QuitCommand::execute()
 {
   if (_kill)
   {
@@ -548,3 +548,4 @@ void quitCommand::execute()
   }
   exit(0);
 }
+

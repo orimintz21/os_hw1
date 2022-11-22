@@ -115,7 +115,7 @@ class QuitCommand : public BuiltInCommand
 {
   // TODO: Add your data members
   string _cmd_line;
-  bool killAll;
+  bool _kill;
 
 public:
   QuitCommand(string cmd_line, vector<string> &args);
@@ -267,6 +267,7 @@ public:
   bool jobsListIsEmpty() const { return _jobsList._jobs.empty(); }
   JobsList::JobEntry *getLastJobId(int *job_id);
   JobsList::JobEntry *getJobById(int job_id);
+  JobsList::JobEntry *getLastStoppedJob(int *job_id){ _jobsList.getLastStoppedJob(job_id); }
   void removeJobById(int job_id) { _jobsList.removeJobById(job_id); }
   void killAllJobs() { _jobsList.killAllJobs(); }
 };
