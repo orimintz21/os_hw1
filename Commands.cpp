@@ -138,6 +138,7 @@ void JobsList::printJobsList()
 
 void JobsList::killAllJobs()
 {
+  removeFinishedJobs();
   cout << "smash: sending SIGKILL signal to " << _jobs.size() << " jobs:" << endl;
   for (auto cm : _jobs)
   {
@@ -206,9 +207,10 @@ JobsList::JobEntry *JobsList::getLastStoppedJob(int *jobId)
       return &(it->second);
     }
   }
+  return nullptr;
 }
 
-SmallShell::SmallShell() : _prompt("smash"), _preDir(""), _currentDir("")
+SmallShell::SmallShell() : _jobsList(), _prompt("smash"), _preDir(""), _currentDir("")
 {
   // TODO: add your implementation
   char *path = getcwd(NULL, 0);
@@ -270,14 +272,14 @@ shared_ptr<Command> SmallShell::CreateCommand(const char *cmd_line)
   {
     return make_shared<QuitCommand>(cmd, args);
   }
-  else if (commend == "kill")
-  {
-    return make_shared<KillCommand>(cmd, args);
-  }
-  // else
+  // else if (commend == "kill")
   // {
-  //   return make_shared(ExternalCommand(cmd_cpy));
+  //   return make_shared<KillCommand>(cmd, args);
   // }
+  else
+  {
+    return make_shared<ExternalCommand>(cmd_line, cmd, args, inBackground);
+  }
 
   // For example:
   /*
@@ -381,7 +383,7 @@ ShowPidCommand::ShowPidCommand(string cmd_line, vector<string> &args) : BuiltInC
 }
 void ShowPidCommand::execute()
 {
-  std::cout << int(_newPid);
+  std::cout << int(_newPid) << endl;
 }
 
 GetCurrDirCommand::GetCurrDirCommand(string cmd_line, vector<string> &args) : BuiltInCommand(cmd_line)
@@ -494,7 +496,7 @@ BackgroundCommand::BackgroundCommand(string cmd_line, vector<string> &args) : Bu
     _job = SmallShell::getInstance().getLastStoppedJob(&(_job_id));
     if (!_job)
     {
-      throw ;// there is no stop jobs to resume;
+      throw; // there is no stop jobs to resume;
     }
   }
   else if (args.size() == 2)
@@ -549,3 +551,78 @@ void QuitCommand::execute()
   exit(0);
 }
 
+ExternalCommand::ExternalCommand(const char *cmd_line, string cmd, vector<string> args, bool is_background) : Command(cmd), _cmd_line(cmd_line), _cmd(cmd), _args(args), _is_background(is_background) {}
+
+void ExternalCommand::execute()
+{
+  pid_t pid = fork();
+  if (pid == 0)
+  {
+    setpgrp();
+    bool has_wild_card = false;
+    for (int i = 0; i < _args.size(); ++i)
+    {
+      if (_args[i].find('*') != string::npos || _args[i].find('?') != string::npos)
+      {
+        has_wild_card = true;
+        break;
+      }
+    }
+    if (has_wild_card)
+    {
+      // Todo: implement wild card
+      string bash_cmd = "/bin/bash";
+      if (execl(bash_cmd.c_str(), bash_cmd.c_str(), "-c", _cmd.c_str(), NULL) == -1)
+      {
+        perror("smash error: execv failed");
+        exit(1);
+      }
+    }
+    else
+    {
+      char **args = new char *[_args.size() + 1];
+      string cmd_name = _args[0].substr(_args[0].find_last_of('/') + 1);
+      args[0] = new char[cmd_name.size() + 1];
+      strcpy(args[0], cmd_name.c_str());
+      for (int i = 1; i < _args.size(); ++i)
+      {
+        args[i] = new char[_args[i].size() + 1];
+        strcpy(args[i], _args[i].c_str());
+      }
+      args[_args.size()] = NULL;
+      if (execv(_args[0].c_str(), args) == -1)
+      {
+        string bin_cmd = "/bin/" + cmd_name;
+        if (execv(bin_cmd.c_str(), args) == -1)
+        {
+          for (int i = 0; i < _args.size() + 1; ++i)
+          {
+            delete[] args[i];
+          }
+          delete[] args;
+          perror("smash error: >");
+          exit(1);
+        }
+      }
+    }
+  }
+  else
+  {
+    if (pid == -1)
+    {
+      perror("smash error: fork failed");
+      return;
+    }
+    this->_pid = pid;
+    if (_is_background)
+    {
+      SmallShell::getInstance().addJob(this, false);
+    }
+    else
+    {
+      // SmallShell::getInstance().addJob(this, false);
+      waitpid(pid, NULL, 0);
+      // SmallShell::getInstance().removeJobById(this->_pid);
+    }
+  }
+}

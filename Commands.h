@@ -25,7 +25,7 @@ protected:
 public:
   Command(pid_t pid, string cmd_line);
   Command(string _cmd_line);
-  virtual ~Command();
+  virtual ~Command() = default;
   virtual void execute() = 0;
   virtual pid_t getPid();
   virtual string getCmdLine();
@@ -43,8 +43,14 @@ public:
 
 class ExternalCommand : public Command
 {
+private:
+  const char *_cmd_line;
+  string _cmd;
+  vector<string> _args;
+  bool _is_background;
+
 public:
-  ExternalCommand(const char *cmd_line);
+  ExternalCommand(const char *cmd_line, string cmd, vector<string> args, bool is_background);
   virtual ~ExternalCommand() {}
   void execute() override;
 };
@@ -85,8 +91,9 @@ class ChangeDirCommand : public BuiltInCommand
 {
   // TODO: Add your data members public:
   string _dir;
+
+public:
   ChangeDirCommand(string cmd_line, vector<string> &args);
-  virtual ~ChangeDirCommand() {}
   void execute() override;
 };
 
@@ -147,8 +154,8 @@ public:
   map<int, JobEntry> _jobs;
 
 public:
-  JobsList();
-  ~JobsList();
+  JobsList() = default;
+  ~JobsList() = default;
   void addJob(Command *cmd, bool isStopped = false);
   void printJobsList();
   void killAllJobs();
@@ -222,16 +229,16 @@ public:
   void execute() override;
 };
 
-class KillCommand : public BuiltInCommand
-{
-  /* Bonus */
-  // TODO: Add your data members
-public:
-  KillCommand(const char *cmd_line, JobsList *jobs);
-  //KillCommand(const char *cmd_line, JobsList *jobs);
-  virtual ~KillCommand() {}
-  void execute() override;
-};
+// class KillCommand : public BuiltInCommand
+// {
+//   /* Bonus */
+//   // TODO: Add your data members
+// public:
+//   KillCommand(const char *cmd_line, JobsList *jobs);
+//   // KillCommand(const char *cmd_line, JobsList *jobs);
+//   virtual ~KillCommand() {}
+//   void execute() override;
+// };
 
 class SmallShell
 {
@@ -261,16 +268,17 @@ public:
   string &getCurrentDir();
   void setPreDir(string &dir);
   void setCurrentDir(string &dir);
-  void setPrompt(string newPrompt);
+  void setPrompt(string newPrompt) { _prompt = newPrompt; }
   vector<string> convertToVector(const char *cmd_line);
   void goToDir(string &dir);
   void printJobsList() { _jobsList.printJobsList(); }
   bool jobsListIsEmpty() const { return _jobsList._jobs.empty(); }
   JobsList::JobEntry *getLastJobId(int *job_id);
   JobsList::JobEntry *getJobById(int job_id);
-  JobsList::JobEntry *getLastStoppedJob(int *job_id){ _jobsList.getLastStoppedJob(job_id); }
+  JobsList::JobEntry *getLastStoppedJob(int *job_id) { return _jobsList.getLastStoppedJob(job_id); }
   void removeJobById(int job_id) { _jobsList.removeJobById(job_id); }
   void killAllJobs() { _jobsList.killAllJobs(); }
+  void addJob(Command *cmd, bool isStopped = false) { _jobsList.addJob(cmd); }
 };
 
 class CommandException : public std::exception
