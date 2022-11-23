@@ -85,6 +85,33 @@ void _removeBackgroundSign(char *cmd_line)
   cmd_line[str.find_last_not_of(WHITESPACE, idx) + 1] = 0;
 }
 
+//almog
+bool isPipeCommand(vector<string> args,int* index)
+{
+  for (int i = 0; i < args.size(); i++)
+    {
+      if (args[i] == ">>" || args[i] == ">" || args[i] == "|&" || args[i] == "|")
+      {
+        *index = i;
+        return true;
+      }
+    }
+    *index = -1;
+    return false;
+}
+//almog
+void splitPipeCommand(vector<string> args,vector<string>& args1,vector<string>& args2, int index)
+{
+    for(int i = 0; i< index; i++)
+    {
+      args1.push_back(args[i]);
+    }
+    for(int i = index +1; i < args.size(); i--)
+    {
+      args2.push_back(args[i]);
+    }
+}
+
 FUNC_ENTRY()
 // TODO: Add your implementation for classes in Commands.h
 Command::Command(string _cmd_line) : _pid(-1), _cmd_line(_cmd_line)
@@ -230,6 +257,7 @@ SmallShell::~SmallShell()
  */
 shared_ptr<Command> SmallShell::CreateCommand(const char *cmd_line)
 {
+
   bool inBackground = _isBackgroundComamnd(cmd_line);
   shared_ptr<char> cmd_cpy(new char[strlen(cmd_line) + 1]);
   strcpy(cmd_cpy.get(), cmd_line);
@@ -237,6 +265,16 @@ shared_ptr<Command> SmallShell::CreateCommand(const char *cmd_line)
   vector<string> args = convertToVector(cmd_cpy.get());
   string cmd = cmd_cpy.get();
   cmd = setFullCmd(cmd);
+  // almog
+  int *index;
+  if(isPipeCommand(args,index))
+  {
+    vector<string> args1;
+    vector<string> args2;
+    splitPipeCommand(args,args1,args2,*index);
+    //split cmd maybe?
+    return make_shared<PipeCommand>(cmd_line, cmd, args, args1, args2);
+  }
   if (args.size() == 0)
   {
     return nullptr;
@@ -575,7 +613,10 @@ void QuitCommand::execute()
   exit(0);
 }
 
-ExternalCommand::ExternalCommand(const char *cmd_line, string cmd, vector<string> args, bool is_background) : Command(cmd), _cmd_line(cmd_line), _cmd(cmd), _args(args), _is_background(is_background) {}
+ExternalCommand::ExternalCommand(const char *cmd_line, string cmd, vector<string> args, bool is_background) : Command(cmd),
+                                                                                                              _cmd_line(cmd_line),
+                                                                                                              _cmd(cmd), _args(args),
+                                                                                                              _is_background(is_background){}
 
 void ExternalCommand::execute()
 {
@@ -649,4 +690,23 @@ void ExternalCommand::execute()
       // SmallShell::getInstance().removeJobById(this->_pid);
     }
   }
+}
+PipeCommand::PipeCommand(const char *cmd_line, string cmd, vector<string> args ,vector<string> args1 ,vector<string> args2): Command(cmd),
+                                                                                                                            _cmd_line(cmd_line),
+                                                                                                                            _cmd(cmd),
+                                                                                                                            _args(args),
+                                                                                                                            _args1(args),
+                                                                                                                            _args2(args){}
+
+void PipeCommand::execute()
+{
+  int fd[2];
+
+  pipe(fd);
+  if(fork() == 0)
+  {
+    close(fd[0]);
+    
+  }
+  close(fd[1]);
 }
