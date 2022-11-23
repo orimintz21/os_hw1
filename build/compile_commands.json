@@ -1,0 +1,17 @@
+[
+{
+  "directory": "/home/orimintz21/os/hw1/skeleton_smash/build",
+  "command": "/usr/bin/g++   -g -std=gnu++14 -o CMakeFiles/skeleton_smash.dir/smash.cpp.o -c /home/orimintz21/os/hw1/skeleton_smash/smash.cpp",
+  "file": "/home/orimintz21/os/hw1/skeleton_smash/smash.cpp"
+},
+{
+  "directory": "/home/orimintz21/os/hw1/skeleton_smash/build",
+  "command": "/usr/bin/g++   -g -std=gnu++14 -o CMakeFiles/skeleton_smash.dir/Commands.cpp.o -c /home/orimintz21/os/hw1/skeleton_smash/Commands.cpp",
+  "file": "/home/orimintz21/os/hw1/skeleton_smash/Commands.cpp"
+},
+{
+  "directory": "/home/orimintz21/os/hw1/skeleton_smash/build",
+  "command": "/usr/bin/g++   -g -std=gnu++14 -o CMakeFiles/skeleton_smash.dir/signals.cpp.o -c /home/orimintz21/os/hw1/skeleton_smash/signals.cpp",
+  "file": "/home/orimintz21/os/hw1/skeleton_smash/signals.cpp"
+}
+]

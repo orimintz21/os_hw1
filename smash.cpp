@@ -30,7 +30,6 @@ int main(int argc, char *argv[])
         }
         catch (const CommandException &e)
         {
-            std::cout << e.what() << std::endl;
         }
     }
     return 0;

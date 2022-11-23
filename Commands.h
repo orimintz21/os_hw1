@@ -6,6 +6,8 @@
 #include <memory>
 #include <map>
 #include <time.h>
+using std::cerr;
+using std::endl;
 using std::map;
 using std::shared_ptr;
 using std::string;
@@ -55,17 +57,17 @@ public:
   void execute() override;
 };
 
-class PipeCommand : public Command
-{
-  const char *_cmd_line;
-  vector<string> _args;
-  vector<string> _args1;
-  vector<string> _args2;
-public:
-  PipeCommand(const char *cmd_line, vector<string> args ,vector<string> args1 ,vector<string> args2);
-  virtual ~PipeCommand() {}
-  void execute() override;
-};
+// class PipeCommand : public Command
+// {
+//   const char *_cmd_line;
+//   vector<string> _args;
+//   vector<string> _args1;
+//   vector<string> _args2;
+// public:
+//   PipeCommand(const char *cmd_line, vector<string> args ,vector<string> args1 ,vector<string> args2);
+//   virtual ~PipeCommand() {}
+//   void execute() override;
+// };
 
 class ChpromptCommand : public BuiltInCommand
 {
@@ -252,6 +254,8 @@ private:
   string _preDir;
   string _currentDir;
   JobsList _jobsList;
+  pid_t _current_cmd_pid;
+  Command *_current_cmd;
   SmallShell();
 
 public:
@@ -284,6 +288,11 @@ public:
   void killAllJobs() { _jobsList.killAllJobs(); }
   void addJob(Command *cmd, bool isStopped = false) { _jobsList.addJob(cmd); }
   string setFullCmd(string &cmd);
+  void sendControlC();
+  int getCurrentCmdPid() const { return _current_cmd_pid; }
+  void setCurrentCmdPid(int cmd_pid) { _current_cmd_pid = cmd_pid; }
+  Command *getCurrentCmd() const { return _current_cmd; }
+  void setCurrentCmd(Command *cmd) { _current_cmd = cmd; }
 };
 
 class CommandException : public std::exception
@@ -295,12 +304,9 @@ private:
   string _cmd_line;
 
 public:
-  TooManyArguments(string &cmd) : _cmd_line(cmd) {}
-
-  const char *what() const noexcept
+  TooManyArguments(string &cmd) : _cmd_line(cmd)
   {
-    string ans = "smash error: " + _cmd_line + ": too many arguments";
-    return ans.c_str();
+    cerr << "smash error: " + _cmd_line + ": too many arguments" << endl;
   }
 };
 
@@ -324,11 +330,9 @@ private:
   string _cmd_line;
 
 public:
-  OldPwdNotSet(string &cmd) : _cmd_line(cmd) {}
-  const char *what() const noexcept
+  OldPwdNotSet(string &cmd) : _cmd_line(cmd)
   {
-    string ans = "smash error: " + _cmd_line + ": OLDPWD not set";
-    return ans.c_str();
+    cerr << "smash error: " + _cmd_line + ": OLDPWD not set" << endl;
   }
 };
 
@@ -342,11 +346,9 @@ private:
   string _cmd_line;
 
 public:
-  JobsListIsEmpty(string &cmd) : _cmd_line(cmd) {}
-  const char *what() const noexcept
+  JobsListIsEmpty(string &cmd) : _cmd_line(cmd)
   {
-    string ans = "smash error: " + _cmd_line + ": jobs list is empty";
-    return ans.c_str();
+    cerr << "smash error: " + _cmd_line + ": jobs list is empty" << endl;
   }
 };
 
@@ -356,11 +358,9 @@ private:
   string _cmd_line;
 
 public:
-  InvalidArguments(string &cmd) : _cmd_line(cmd) {}
-  const char *what() const noexcept
+  InvalidArguments(string &cmd) : _cmd_line(cmd)
   {
-    string ans = "smash error: " + _cmd_line + ": invalid arguments";
-    return ans.c_str();
+    cerr << "smash error: " + _cmd_line + ": invalid arguments" << endl;
   }
 };
 
@@ -371,11 +371,9 @@ private:
   int _job_id;
 
 public:
-  JobDoesNotExist(string cmd, int job_id) : _cmd_line(cmd), _job_id(job_id) {}
-  const char *what() const noexcept
+  JobDoesNotExist(string cmd, int job_id) : _cmd_line(cmd), _job_id(job_id)
   {
-    string ans = "smash error: " + _cmd_line + ": job-id " + to_string(_job_id) + " does not exist";
-    return ans.c_str();
+    cerr << "smash error: " + _cmd_line + ": job-id " + to_string(_job_id) + " does not exist" << endl;
   }
 };
 
@@ -386,12 +384,9 @@ private:
   int _job_id;
 
 public:
-  AlreadyRunningInBackground(string cmd, int job_id) : _cmd_line(cmd), _job_id(job_id) {}
-
-  const char *what() const noexcept
+  AlreadyRunningInBackground(string cmd, int job_id) : _cmd_line(cmd), _job_id(job_id)
   {
-    string ans = "smash error: " + _cmd_line + ": job-id " + to_string(_job_id) + " is already running in the background";
-    return ans.c_str();
+    cerr << "smash error: " + _cmd_line + ": job-id " + to_string(_job_id) + " is already running in the background" << endl;
   }
 };
 

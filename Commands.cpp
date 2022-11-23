@@ -85,32 +85,32 @@ void _removeBackgroundSign(char *cmd_line)
   cmd_line[str.find_last_not_of(WHITESPACE, idx) + 1] = 0;
 }
 
-//almog
-bool isPipeCommand(vector<string> args,int* index)
-{
-  for (int i = 0; i < args.size(); i++)
-    {
-      if (args[i] == ">>" || args[i] == ">" || args[i] == "|&" || args[i] == "|")
-      {
-        *index = i;
-        return true;
-      }
-    }
-    *index = -1;
-    return false;
-}
-//almog
-void splitPipeCommand(vector<string> args,vector<string>& args1,vector<string>& args2, int index)
-{
-    for(int i = 0; i< index; i++)
-    {
-      args1.push_back(args[i]);
-    }
-    for(int i = index +1; i < args.size(); i--)
-    {
-      args2.push_back(args[i]);
-    }
-}
+// almog
+// bool isPipeCommand(vector<string> args, int *index)
+// {
+//   for (int i = 0; i < args.size(); i++)
+//   {
+//     if (args[i] == ">>" || args[i] == ">" || args[i] == "|&" || args[i] == "|")
+//     {
+//       *index = i;
+//       return true;
+//     }
+//   }
+//   *index = -1;
+//   return false;
+// }
+// almog
+// void splitPipeCommand(vector<string> args, vector<string> &args1, vector<string> &args2, int index)
+// {
+//   for (int i = 0; i < index; i++)
+//   {
+//     args1.push_back(args[i]);
+//   }
+//   for (int i = index + 1; i < args.size(); i--)
+//   {
+//     args2.push_back(args[i]);
+//   }
+// }
 
 FUNC_ENTRY()
 // TODO: Add your implementation for classes in Commands.h
@@ -217,8 +217,8 @@ JobsList::JobEntry *JobsList::getLastJob(int *lastJobId)
   {
     return nullptr;
   }
-  *lastJobId = _jobs.end()->first;
-  return &(_jobs.end()->second);
+  *lastJobId = (--_jobs.end())->first;
+  return &((--_jobs.end())->second);
 }
 
 JobsList::JobEntry *JobsList::getLastStoppedJob(int *jobId)
@@ -238,7 +238,7 @@ JobsList::JobEntry *JobsList::getLastStoppedJob(int *jobId)
   return nullptr;
 }
 
-SmallShell::SmallShell() : _jobsList(), _prompt("smash"), _preDir(""), _currentDir("")
+SmallShell::SmallShell() : _prompt("smash"), _preDir(""), _currentDir(""), _jobsList(), _current_cmd_pid(-1), _current_cmd(nullptr)
 {
   // TODO: add your implementation
   char *path = getcwd(NULL, 0);
@@ -266,15 +266,15 @@ shared_ptr<Command> SmallShell::CreateCommand(const char *cmd_line)
   string cmd = cmd_cpy.get();
   cmd = setFullCmd(cmd);
   // almog
-  int *index;
-  if(isPipeCommand(args,index))
-  {
-    vector<string> args1;
-    vector<string> args2;
-    splitPipeCommand(args,args1,args2,*index);
-    //split cmd maybe?
-    return make_shared<PipeCommand>(cmd_line, cmd, args, args1, args2);
-  }
+  // int *index;
+  // if (isPipeCommand(args, index))
+  // {
+  //   vector<string> args1;
+  //   vector<string> args2;
+  //   splitPipeCommand(args, args1, args2, *index);
+  //   // split cmd maybe?
+  //   return make_shared<PipeCommand>(cmd_line, cmd, args, args1, args2);
+  // }
   if (args.size() == 0)
   {
     return nullptr;
@@ -404,6 +404,7 @@ string SmallShell::setFullCmd(string &cmd)
     ans += word;
     ans += " ";
   }
+  ans.pop_back();
   return ans;
 }
 
@@ -544,10 +545,10 @@ void ForegroundCommand::execute()
     {
       _job->setStopped(false);
     }
+    cout << _job->getCommand() << " : " << _job->getPid() << endl;
     waitpid(_job->getPid(), NULL, WUNTRACED);
     SmallShell::getInstance().removeJobById(_job_id);
   }
-  cout << _job->getCommand() << " : " << _job->getPid() << endl;
 }
 
 BackgroundCommand::BackgroundCommand(string cmd_line, vector<string> &args) : BuiltInCommand(cmd_line)
@@ -616,7 +617,7 @@ void QuitCommand::execute()
 ExternalCommand::ExternalCommand(const char *cmd_line, string cmd, vector<string> args, bool is_background) : Command(cmd),
                                                                                                               _cmd_line(cmd_line),
                                                                                                               _cmd(cmd), _args(args),
-                                                                                                              _is_background(is_background){}
+                                                                                                              _is_background(is_background) {}
 
 void ExternalCommand::execute()
 {
@@ -655,22 +656,16 @@ void ExternalCommand::execute()
         strcpy(args[i], _args[i].c_str());
       }
       args[_args.size()] = NULL;
-      if (execv(_args[0].c_str(), args) == -1)
-      {
-        string bin_cmd = "/bin/" + cmd_name;
-        if (execv(bin_cmd.c_str(), args) == -1)
-        {
-          for (int i = 0; i < _args.size() + 1; ++i)
-          {
-            delete[] args[i];
-          }
-          delete[] args;
-          perror("smash error: >");
-          exit(1);
-        }
-      }
+      execv(_args[0].c_str(), args);
+
+      string bin_cmd = "/bin/" + cmd_name;
+      execv(bin_cmd.c_str(), args);
+
+      perror("smash error: >");
+      exit(1);
     }
   }
+
   else
   {
     if (pid == -1)
@@ -685,28 +680,30 @@ void ExternalCommand::execute()
     }
     else
     {
-      // SmallShell::getInstance().addJob(this, false);
-      waitpid(pid, NULL, 0);
-      // SmallShell::getInstance().removeJobById(this->_pid);
+      SmallShell::getInstance().setCurrentCmd(this);
+      SmallShell::getInstance().setCurrentCmdPid(this->getPid());
+      waitpid(pid, NULL, WUNTRACED);
+      SmallShell::getInstance().setCurrentCmd(nullptr);
+      SmallShell::getInstance().setCurrentCmdPid(-1);
     }
   }
 }
-PipeCommand::PipeCommand(const char *cmd_line, string cmd, vector<string> args ,vector<string> args1 ,vector<string> args2): Command(cmd),
-                                                                                                                            _cmd_line(cmd_line),
-                                                                                                                            _cmd(cmd),
-                                                                                                                            _args(args),
-                                                                                                                            _args1(args),
-                                                                                                                            _args2(args){}
 
-void PipeCommand::execute()
-{
-  int fd[2];
+// PipeCommand::PipeCommand(const char *cmd_line, string cmd, vector<string> args ,vector<string> args1 ,vector<string> args2): Command(cmd),
+//                                                                                                                             _cmd_line(cmd_line),
+//                                                                                                                             _cmd(cmd),
+//                                                                                                                             _args(args),
+//                                                                                                                             _args1(args),
+//                                                                                                                             _args2(args){}
 
-  pipe(fd);
-  if(fork() == 0)
-  {
-    close(fd[0]);
-    
-  }
-  close(fd[1]);
-}
+// void PipeCommand::execute()
+// {
+//   int fd[2];
+
+//   pipe(fd);
+//   if (fork() == 0)
+//   {
+//     close(fd[0]);
+//   }
+//   close(fd[1]);
+// }
