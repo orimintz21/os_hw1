@@ -236,6 +236,7 @@ shared_ptr<Command> SmallShell::CreateCommand(const char *cmd_line)
   _removeBackgroundSign(cmd_cpy.get());
   vector<string> args = convertToVector(cmd_cpy.get());
   string cmd = cmd_cpy.get();
+  cmd = setFullCmd(cmd);
   if (args.size() == 0)
   {
     return nullptr;
@@ -279,6 +280,10 @@ shared_ptr<Command> SmallShell::CreateCommand(const char *cmd_line)
   // }
   else
   {
+    if (inBackground)
+    {
+      cmd += "&";
+    }
     return make_shared<ExternalCommand>(cmd_line, cmd, args, inBackground);
   }
 
@@ -349,6 +354,19 @@ string &SmallShell::getPreDir()
 void SmallShell::setCurrentDir(string &dir)
 {
   _currentDir = dir;
+}
+
+string SmallShell::setFullCmd(string &cmd)
+{
+  string ans;
+  stringstream ss(cmd);
+  string word;
+  while (ss >> word)
+  {
+    ans += word;
+    ans += " ";
+  }
+  return ans;
 }
 
 ChpromptCommand::ChpromptCommand(string cmd_line, vector<string> &args) : BuiltInCommand(cmd_line)

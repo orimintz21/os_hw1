@@ -280,6 +280,7 @@ public:
   void removeJobById(int job_id) { _jobsList.removeJobById(job_id); }
   void killAllJobs() { _jobsList.killAllJobs(); }
   void addJob(Command *cmd, bool isStopped = false) { _jobsList.addJob(cmd); }
+  string setFullCmd(string &cmd);
 };
 
 class CommandException : public std::exception
