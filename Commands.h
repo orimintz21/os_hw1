@@ -148,6 +148,7 @@ public:
     pid_t getPid() const { return _pid; }
     string getCommand() const { return _command; }
     bool isStopped() const { return _isStopped; }
+    void setStopped(bool isStopped) { _isStopped = isStopped; }
     time_t getStartTime() const { return _start_time; }
   };
   // TODO: Add your data members

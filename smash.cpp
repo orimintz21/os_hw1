@@ -23,8 +23,15 @@ int main(int argc, char *argv[])
     {
         std::cout << smash.getPrompt() << "> ";
         std::string cmd_line;
-        std::getline(std::cin, cmd_line);
-        smash.executeCommand(cmd_line.c_str());
+        try
+        {
+            std::getline(std::cin, cmd_line);
+            smash.executeCommand(cmd_line.c_str());
+        }
+        catch (const CommandException &e)
+        {
+            std::cout << e.what() << std::endl;
+        }
     }
     return 0;
 }

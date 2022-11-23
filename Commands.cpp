@@ -165,6 +165,7 @@ void JobsList::removeFinishedJobs()
 
 JobsList::JobEntry *JobsList::getJobById(int jobId)
 {
+  removeFinishedJobs();
   auto it = _jobs.find(jobId);
   if (it != _jobs.end())
   {
@@ -469,6 +470,7 @@ ForegroundCommand::ForegroundCommand(string cmd_line, vector<string> &args) : Bu
       {
         throw InvalidArguments(args[0]);
       }
+      _job_id = stoi(args[1]);
     }
     _job = SmallShell::getInstance().getJobById(_job_id);
   }
@@ -482,7 +484,11 @@ void ForegroundCommand::execute()
   }
   else
   {
-    waitpid(_job->getPid(), NULL, SIGCONT);
+    if (_job->isStopped())
+    {
+      _job->setStopped(false);
+    }
+    waitpid(_job->getPid(), NULL, WUNTRACED);
     SmallShell::getInstance().removeJobById(_job_id);
   }
   cout << _job->getCommand() << " : " << _job->getPid() << endl;
