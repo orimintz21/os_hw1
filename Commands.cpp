@@ -127,11 +127,12 @@ BuiltInCommand::BuiltInCommand(string cmd_line) : Command(cmd_line)
 {
 }
 
-JobsList::JobEntry::JobEntry(int job_id, pid_t pid, const string cmd_line, bool isStopped) : _job_id(job_id),
-                                                                                             _command(cmd_line),
-                                                                                             _pid(pid),
-                                                                                             _isStopped(isStopped),
-                                                                                             _start_time(time(NULL))
+JobsList::JobEntry::JobEntry(int job_id, pid_t pid, const string cmd_line, bool isStopped, Command *cmd) : _job_id(job_id),
+                                                                                                           _command(cmd_line),
+                                                                                                           _pid(pid),
+                                                                                                           _isStopped(isStopped),
+                                                                                                           _start_time(time(NULL)),
+                                                                                                           _cmd(cmd)
 {
 }
 
@@ -143,7 +144,7 @@ void JobsList::addJob(Command *cmd, bool isStopped)
   {
     job_id = _jobs.end()->first + 1;
   }
-  JobEntry newJobEntry = JobEntry(job_id, cmd->getPid(), cmd->getCmdLine(), isStopped);
+  JobEntry newJobEntry = JobEntry(job_id, cmd->getPid(), cmd->getCmdLine(), isStopped, cmd);
   _jobs.insert(pair<int, JobEntry>(job_id, newJobEntry));
 }
 
@@ -227,7 +228,7 @@ JobsList::JobEntry *JobsList::getLastStoppedJob(int *jobId)
   {
     return nullptr;
   }
-  for (auto it = _jobs.end(); it != _jobs.begin();)
+  for (auto it = _jobs.rbegin(); it != _jobs.rend(); ++it)
   {
     if (it->second.isStopped())
     {
@@ -255,7 +256,7 @@ SmallShell::~SmallShell()
 /**
  * Creates and returns a pointer to Command class which matches the given command line (cmd_line)
  */
-shared_ptr<Command> SmallShell::CreateCommand(const char *cmd_line)
+Command *SmallShell::CreateCommand(const char *cmd_line)
 {
 
   bool inBackground = _isBackgroundComamnd(cmd_line);
@@ -282,35 +283,35 @@ shared_ptr<Command> SmallShell::CreateCommand(const char *cmd_line)
   string commend = args[0];
   if (commend == "chprompt")
   {
-    return make_shared<ChpromptCommand>(cmd, args);
+    return new ChpromptCommand(cmd, args);
   }
   else if (commend == "showpid")
   {
-    return make_shared<ShowPidCommand>(cmd, args);
+    return new ShowPidCommand(cmd, args);
   }
   else if (commend == "pwd")
   {
-    return make_shared<GetCurrDirCommand>(cmd, args);
+    return new GetCurrDirCommand(cmd, args);
   }
   else if (commend == "cd")
   {
-    return make_shared<ChangeDirCommand>(cmd, args);
+    return new ChangeDirCommand(cmd, args);
   }
   else if (commend == "jobs")
   {
-    return make_shared<JobsCommand>(cmd, args);
+    return new JobsCommand(cmd, args);
   }
   else if (commend == "fg")
   {
-    return make_shared<ForegroundCommand>(cmd, args);
+    return new ForegroundCommand(cmd, args);
   }
   else if (commend == "bg")
   {
-    return make_shared<BackgroundCommand>(cmd, args);
+    return new BackgroundCommand(cmd, args);
   }
   else if (commend == "quit")
   {
-    return make_shared<QuitCommand>(cmd, args);
+    return new QuitCommand(cmd, args);
   }
   // else if (commend == "kill")
   // {
@@ -322,7 +323,7 @@ shared_ptr<Command> SmallShell::CreateCommand(const char *cmd_line)
     {
       cmd += "&";
     }
-    return make_shared<ExternalCommand>(cmd_line, cmd, args, inBackground);
+    return new ExternalCommand(cmd_line, cmd, args, inBackground);
   }
 
   // For example:
@@ -349,7 +350,7 @@ void SmallShell::executeCommand(const char *cmd_line)
 {
   // TODO: Add your implementation here
   // for example:
-  shared_ptr<Command> cmd = CreateCommand(cmd_line);
+  Command *cmd = CreateCommand(cmd_line);
   cmd->execute();
   // Please note that you must fork smash process for some commands (e.g., external commands....)
 }
@@ -459,7 +460,7 @@ ChangeDirCommand::ChangeDirCommand(string cmd_line, vector<string> &args) : Buil
 {
   if (args.size() == 1)
   {
-    throw TooFewArguments(cmd_line);
+    throw InvalidArguments(cmd_line);
   }
   else if (args.size() == 2)
   {
@@ -517,7 +518,7 @@ ForegroundCommand::ForegroundCommand(string cmd_line, vector<string> &args) : Bu
   }
   else if (args.size() > 2)
   {
-    throw InvalidArguments(args[0]);
+    throw InvalidArguments(cmd_line);
   }
   else
   {
@@ -525,7 +526,7 @@ ForegroundCommand::ForegroundCommand(string cmd_line, vector<string> &args) : Bu
     {
       if (!isdigit(args[1][i]))
       {
-        throw InvalidArguments(args[0]);
+        throw InvalidArguments(cmd_line);
       }
       _job_id = stoi(args[1]);
     }
@@ -544,9 +545,12 @@ void ForegroundCommand::execute()
     if (_job->isStopped())
     {
       _job->setStopped(false);
+      kill(_job->getPid(), SIGCONT);
     }
     cout << _job->getCommand() << " : " << _job->getPid() << endl;
-    waitpid(_job->getPid(), NULL, WUNTRACED);
+    SmallShell::getInstance().setCurrentCmd(_job->getCmd());
+    SmallShell::getInstance().setCurrentCmdPid(_job->getPid());
+    waitpid(_job->getPid(), NULL, 0);
     SmallShell::getInstance().removeJobById(_job_id);
   }
 }
@@ -559,7 +563,7 @@ BackgroundCommand::BackgroundCommand(string cmd_line, vector<string> &args) : Bu
     _job = SmallShell::getInstance().getLastStoppedJob(&(_job_id));
     if (!_job)
     {
-      throw; // there is no stop jobs to resume;
+      throw NoStopedJobs(args[0]);
     }
   }
   else if (args.size() == 2)
@@ -568,7 +572,7 @@ BackgroundCommand::BackgroundCommand(string cmd_line, vector<string> &args) : Bu
     {
       if (!isdigit(args[1][i]))
       {
-        throw InvalidArguments(args[0]);
+        throw InvalidArguments(cmd_line);
       }
     }
     _job_id = stoi(args[1]);
@@ -584,7 +588,7 @@ BackgroundCommand::BackgroundCommand(string cmd_line, vector<string> &args) : Bu
   }
   if (args.size() > 2)
   {
-    throw InvalidArguments(args[0]);
+    throw InvalidArguments(cmd_line);
   }
 }
 

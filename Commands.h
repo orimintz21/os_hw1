@@ -6,6 +6,7 @@
 #include <memory>
 #include <map>
 #include <time.h>
+#include <iostream>
 using std::cerr;
 using std::endl;
 using std::map;
@@ -146,12 +147,15 @@ public:
     string _command;
     bool _isStopped;
     time_t _start_time;
+    Command *_cmd;
 
   public:
-    JobEntry(int job_id, pid_t pid, const string command, bool isStopped);
+    JobEntry(int job_id, pid_t pid, const string command, bool isStopped, Command *cmd);
     int getJobId() const { return _job_id; }
     pid_t getPid() const { return _pid; }
     string getCommand() const { return _command; }
+    Command *getCmd() { return _cmd; }
+    void setCmd(Command *cmd) { _cmd = cmd; }
     bool isStopped() const { return _isStopped; }
     void setStopped(bool isStopped) { _isStopped = isStopped; }
     time_t getStartTime() const { return _start_time; }
@@ -259,7 +263,7 @@ private:
   SmallShell();
 
 public:
-  shared_ptr<Command> CreateCommand(const char *cmd_line);
+  Command *CreateCommand(const char *cmd_line);
   SmallShell(SmallShell const &) = delete;     // disable copy ctor
   void operator=(SmallShell const &) = delete; // disable = operator
   static SmallShell &getInstance()             // make SmallShell singleton
@@ -286,7 +290,7 @@ public:
   JobsList::JobEntry *getLastStoppedJob(int *job_id) { return _jobsList.getLastStoppedJob(job_id); }
   void removeJobById(int job_id) { _jobsList.removeJobById(job_id); }
   void killAllJobs() { _jobsList.killAllJobs(); }
-  void addJob(Command *cmd, bool isStopped = false) { _jobsList.addJob(cmd); }
+  void addJob(Command *cmd, bool isStopped = false) { _jobsList.addJob(cmd, isStopped); }
   string setFullCmd(string &cmd);
   void sendControlC();
   int getCurrentCmdPid() const { return _current_cmd_pid; }
@@ -307,20 +311,6 @@ public:
   TooManyArguments(string &cmd) : _cmd_line(cmd)
   {
     cerr << "smash error: " + _cmd_line + ": too many arguments" << endl;
-  }
-};
-
-class TooFewArguments : public CommandException
-{
-private:
-  string _cmd_line;
-
-public:
-  TooFewArguments(string &cmd) : _cmd_line(cmd) {}
-  const char *what() const noexcept
-  {
-    string ans = "smash error:> " + _cmd_line;
-    return ans.c_str();
   }
 };
 
@@ -390,4 +380,15 @@ public:
   }
 };
 
+class NoStopedJobs : public CommandException
+{
+private:
+  string _cmd_line;
+
+public:
+  NoStopedJobs(string &cmd) : _cmd_line(cmd)
+  {
+    cerr << "smash error: " + _cmd_line + ": there is no stoped jobs to resume" << endl;
+  }
+};
 #endif // SMASH_COMMAND_H_
