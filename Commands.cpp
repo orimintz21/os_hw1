@@ -101,38 +101,26 @@ bool SmallShell::isRedirectionCommand(string &cmd, int &index, bool &is_append)
   }
   return false;
 }
-
+bool SmallShell::isPipeCommand(string &cmd, int &index, bool &is_err)
+{
+  is_err = false;
+  int i = cmd.find("|");
+  if (i != std::string::npos)
+  {
+    if (i < cmd.size() - 1 && cmd[i + 1] == '&')
+    {
+      is_err = true;
+    }
+    index = i;
+    return true;
+  }
+  return false;
+}
 void SmallShell::splitRedirectionCommand(string &cmd, vector<string> &args1, vector<string> &args2, int index, bool is_append)
 {
   args1 = convertToVector((cmd.substr(0, index)).c_str());
   args2 = convertToVector((cmd.substr(index + 1 + int(is_append))).c_str());
 }
-
-// bool isPipeCommand(vector<string> args, int &index)
-// {
-//   for (int i = 0; i < args.size(); i++)
-//   {
-//     if (args[i] == ">>" || args[i] == ">" || args[i] == "|&" || args[i] == "|")
-//     {
-//       index = i;
-//       return true;
-//     }
-//   }
-//   index = -1;
-//   return false;
-// }
-
-// void splitPipeCommand(vector<string> args, vector<string> &args1, vector<string> &args2, int index)
-// {
-//   for (int i = 0; i < index; i++)
-//   {
-//     args1.push_back(args[i]);
-//   }
-//   for (int i = index + 1; i < args.size(); i--)
-//   {
-//     args2.push_back(args[i]);
-//   }
-// }
 
 FUNC_ENTRY()
 // TODO: Add your implementation for classes in Commands.h
@@ -288,25 +276,23 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
   string cmd = cmd_cpy.get();
   cmd = setFullCmd(cmd);
   int index;
-  bool is_append = false;
-  if (isRedirectionCommand(cmd, index, is_append))
+  bool sec_inp = false;
+  if (isRedirectionCommand(cmd, index, sec_inp))
   {
     vector<string> args1, args2;
     string cmd1 = cmd.substr(0, index);
-    splitRedirectionCommand(cmd, args1, args2, index, is_append);
-    return new RedirectionCommand(cmd, args1, cmd1, args2, is_append);
+    splitRedirectionCommand(cmd, args1, args2, index, sec_inp);
+    return new RedirectionCommand(cmd, args1, cmd1, args2, sec_inp);
+  }
+  else if (isPipeCommand(cmd, index, sec_inp))
+  {
+    vector<string> args1, args2;
+    string cmd1 = cmd.substr(0, index);
+    string cmd2 = cmd.substr(index + int(sec_inp) + 1);
+    splitRedirectionCommand(cmd, args1, args2, index, sec_inp);
+    return new PipeCommand(cmd, args1, cmd1, args2, cmd2, sec_inp);
   }
   vector<string> args = convertToVector(cmd_cpy.get());
-  // almog
-  // int *index;
-  // if (isPipeCommand(args, index))
-  // {
-  //   vector<string> args1;
-  //   vector<string> args2;
-  //   splitPipeCommand(args, args1, args2, *index);
-  //   // split cmd maybe?
-  //   return make_shared<PipeCommand>(cmd_line, cmd, args, args1, args2);
-  // }
   if (args.size() == 0)
   {
     return nullptr;
@@ -473,7 +459,7 @@ ShowPidCommand::ShowPidCommand(string cmd_line, vector<string> &args) : BuiltInC
 }
 void ShowPidCommand::execute()
 {
-  std::cout << int(_newPid) << endl;
+  std::cout << "smash pid is " << int(_newPid) << endl;
 }
 
 GetCurrDirCommand::GetCurrDirCommand(string cmd_line, vector<string> &args) : BuiltInCommand(cmd_line)
@@ -760,24 +746,90 @@ void RedirectionCommand::execute()
   close(fd);
   dup2(st_output_fd, STDOUT_FILENO);
 }
-// PipeCommand::PipeCommand(const char *cmd_line, string cmd, vector<string> args ,vector<string> args1 ,vector<string> args2): Command(cmd),
-//                                                                                                                             _cmd_line(cmd_line),
-//                                                                                                                             _cmd(cmd),
-//                                                                                                                             _args(args),
-//                                                                                                                             _args1(args),
-//                                                                                                                             _args2(args){}
 
-// void PipeCommand::execute()
-// {
-//   int fd[2];
+PipeCommand::PipeCommand(string &cmd, vector<string> &args1, string &cmd1, vector<string> args2, string &cmd2, bool is_err) : Command(cmd), _args1(args1), _cmd1(cmd1), _args2(args2), _cmd2(cmd2), _is_err(is_err)
+{
+}
+void PipeCommand::execute()
+{
+  int fd[2];
+  int in = dup(STDIN_FILENO);
+  int out = -1;
+  if (_is_err)
+  {
+    out = dup(STDERR_FILENO);
+    close(STDERR_FILENO);
+  }
+  else
+  {
+    out = dup(STDOUT_FILENO);
+    close(STDOUT_FILENO);
+  }
+  close(STDIN_FILENO);
+  pipe(fd);
+  if (fd[0] != 0)
+  {
+    dup2(fd[0], 0);
+    close(fd[0]);
+  }
+  if (_is_err && fd[1] != 2)
+  {
+    dup2(fd[1], 2);
+    close(fd[1]);
+  }
+  else if (!_is_err && fd[1] != 1)
+  {
+    dup2(fd[1], 1);
+    close(fd[1]);
+  }
 
-//   pipe(fd);
-//   if (fork() == 0)
-//   {
-//     close(fd[0]);
-
-//   }
-//   else{
-//     close(fd[1]);
-//   }
-// }
+  if (fork() == 0)
+  {
+    close(0);
+    try
+    {
+      Command *cmd = SmallShell::getInstance().CreateCommand(_cmd1.c_str());
+      cmd->execute();
+    }
+    catch (CommandException &e)
+    {
+    }
+    dup2(in, 0);
+    exit(0);
+  }
+  else
+  {
+    Command *cmd = nullptr;
+    if (_is_err)
+    {
+      close(2);
+      try
+      {
+        cmd = SmallShell::getInstance().CreateCommand(_cmd2.c_str());
+      }
+      catch (CommandException &e)
+      {
+      }
+      dup2(out, STDERR_FILENO);
+    }
+    else
+    {
+      close(1);
+      try
+      {
+        cmd = SmallShell::getInstance().CreateCommand(_cmd2.c_str());
+      }
+      catch (CommandException &e)
+      {
+      }
+      dup2(out, STDOUT_FILENO);
+    }
+    wait(NULL);
+    if (cmd != nullptr)
+    {
+      cmd->execute();
+    }
+  }
+  close(0);
+  dup2(in, STDIN_FILENO);
+}

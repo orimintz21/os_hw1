@@ -58,17 +58,20 @@ public:
   void execute() override;
 };
 
-// class PipeCommand : public Command
-// {
-//   const char *_cmd_line;
-//   vector<string> _args;
-//   vector<string> _args1;
-//   vector<string> _args2;
-// public:
-//   PipeCommand(const char *cmd_line, vector<string> args ,vector<string> args1 ,vector<string> args2);
-//   virtual ~PipeCommand() {}
-//   void execute() override;
-// };
+class PipeCommand : public Command
+{
+  string _cmd;
+  vector<string> _args1;
+  string _cmd1;
+  vector<string> _args2;
+  string _cmd2;
+  bool _is_err;
+
+public:
+  PipeCommand(string &cmd, vector<string> &args1, string &cmd1, vector<string> args2, string &cmd2, bool is_err);
+  virtual ~PipeCommand() {}
+  void execute() override;
+};
 
 class ChpromptCommand : public BuiltInCommand
 {
@@ -304,6 +307,7 @@ public:
   Command *getCurrentCmd() const { return _current_cmd; }
   void setCurrentCmd(Command *cmd) { _current_cmd = cmd; }
   bool isRedirectionCommand(string &cmd, int &index, bool &is_append);
+  bool isPipeCommand(string &cmd, int &index, bool &is_err);
   void splitRedirectionCommand(string &cmd, vector<string> &args1, vector<string> &args2, int index, bool is_append);
 };
 
