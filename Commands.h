@@ -326,6 +326,18 @@ public:
   }
 };
 
+class DefaultError : public CommandException
+{
+private:
+  string _cmd_line;
+
+public:
+  DefaultError(string &cmd) : _cmd_line(cmd)
+  {
+    cerr << "smash error: " + _cmd_line << endl;
+  }
+};
+
 class DirDoesNotExist : public CommandException
 {
 };

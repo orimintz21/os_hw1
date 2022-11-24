@@ -17,6 +17,7 @@ void ctrlZHandler(int sig_num)
     SmallShell::getInstance().addJob(cmd, true);
     SmallShell::getInstance().setCurrentCmdPid(-1);
     SmallShell::getInstance().setCurrentCmd(nullptr);
+
     cout << "smash: process " << int(pid) << " was stopped" << endl;
   }
 }

@@ -550,8 +550,8 @@ void ForegroundCommand::execute()
     cout << _job->getCommand() << " : " << _job->getPid() << endl;
     SmallShell::getInstance().setCurrentCmd(_job->getCmd());
     SmallShell::getInstance().setCurrentCmdPid(_job->getPid());
-    waitpid(_job->getPid(), NULL, 0);
     SmallShell::getInstance().removeJobById(_job_id);
+    waitpid(_job->getPid(), NULL, WUNTRACED);
   }
 }
 
@@ -588,13 +588,14 @@ BackgroundCommand::BackgroundCommand(string cmd_line, vector<string> &args) : Bu
   }
   if (args.size() > 2)
   {
-    throw InvalidArguments(cmd_line);
+    throw DefaultError(cmd_line);
   }
 }
 
 void BackgroundCommand::execute()
 {
   std::cout << _cmd_line << ":" << to_string(_job->getPid()) << endl;
+  _job->setStopped(false);
   kill(_job->getPid(), SIGCONT);
 }
 
