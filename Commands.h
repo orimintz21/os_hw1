@@ -85,8 +85,14 @@ public:
 class RedirectionCommand : public Command
 {
   // TODO: Add your data members
+  vector<string> _args1;
+  string _cmd1;
+  vector<string> _args2;
+  bool _append;
+  string _file_name;
+
 public:
-  explicit RedirectionCommand(const char *cmd_line);
+  explicit RedirectionCommand(string &cmd, vector<string> &args1, string &cmd1, vector<string> &args2, bool append);
   virtual ~RedirectionCommand() {}
   void execute() override;
   // void prepare() override;
@@ -297,6 +303,8 @@ public:
   void setCurrentCmdPid(int cmd_pid) { _current_cmd_pid = cmd_pid; }
   Command *getCurrentCmd() const { return _current_cmd; }
   void setCurrentCmd(Command *cmd) { _current_cmd = cmd; }
+  bool isRedirectionCommand(string &cmd, int &index, bool &is_append);
+  void splitRedirectionCommand(string &cmd, vector<string> &args1, vector<string> &args2, int index, bool is_append);
 };
 
 class CommandException : public std::exception

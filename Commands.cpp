@@ -5,6 +5,7 @@
 #include <sstream>
 #include <memory>
 #include <sys/wait.h>
+#include <fcntl.h>
 #include <iomanip>
 #include "Commands.h"
 #include <signal.h>
@@ -85,21 +86,42 @@ void _removeBackgroundSign(char *cmd_line)
   cmd_line[str.find_last_not_of(WHITESPACE, idx) + 1] = 0;
 }
 
-// almog
-// bool isPipeCommand(vector<string> args, int *index)
+bool SmallShell::isRedirectionCommand(string &cmd, int &index, bool &is_append)
+{
+  is_append = false;
+  int i = cmd.find(">");
+  if (i != std::string::npos)
+  {
+    if (i < cmd.size() - 1 && cmd[i + 1] == '>')
+    {
+      is_append = true;
+    }
+    index = i;
+    return true;
+  }
+  return false;
+}
+
+void SmallShell::splitRedirectionCommand(string &cmd, vector<string> &args1, vector<string> &args2, int index, bool is_append)
+{
+  args1 = convertToVector((cmd.substr(0, index)).c_str());
+  args2 = convertToVector((cmd.substr(index + 1 + int(is_append))).c_str());
+}
+
+// bool isPipeCommand(vector<string> args, int &index)
 // {
 //   for (int i = 0; i < args.size(); i++)
 //   {
 //     if (args[i] == ">>" || args[i] == ">" || args[i] == "|&" || args[i] == "|")
 //     {
-//       *index = i;
+//       index = i;
 //       return true;
 //     }
 //   }
-//   *index = -1;
+//   index = -1;
 //   return false;
 // }
-// almog
+
 // void splitPipeCommand(vector<string> args, vector<string> &args1, vector<string> &args2, int index)
 // {
 //   for (int i = 0; i < index; i++)
@@ -263,9 +285,18 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
   shared_ptr<char> cmd_cpy(new char[strlen(cmd_line) + 1]);
   strcpy(cmd_cpy.get(), cmd_line);
   _removeBackgroundSign(cmd_cpy.get());
-  vector<string> args = convertToVector(cmd_cpy.get());
   string cmd = cmd_cpy.get();
   cmd = setFullCmd(cmd);
+  int index;
+  bool is_append = false;
+  if (isRedirectionCommand(cmd, index, is_append))
+  {
+    vector<string> args1, args2;
+    string cmd1 = cmd.substr(0, index);
+    splitRedirectionCommand(cmd, args1, args2, index, is_append);
+    return new RedirectionCommand(cmd, args1, cmd1, args2, is_append);
+  }
+  vector<string> args = convertToVector(cmd_cpy.get());
   // almog
   // int *index;
   // if (isPipeCommand(args, index))
@@ -696,6 +727,39 @@ void ExternalCommand::execute()
   }
 }
 
+RedirectionCommand::RedirectionCommand(string &cmd, vector<string> &args1, string &cmd1, vector<string> &args2, bool append) : Command(cmd), _args1(args1), _cmd1(cmd1), _args2(args2), _append(append)
+{
+  if (_args1.size() == 0 || _args2.size() == 0)
+  {
+    throw DefaultError(cmd);
+  }
+  _file_name = _args2[0];
+}
+
+void RedirectionCommand::execute()
+{
+  int st_output_fd = dup(STDOUT_FILENO);
+  close(STDOUT_FILENO);
+  int fd;
+  if (_append)
+  {
+    fd = open(_file_name.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0666);
+  }
+  else
+  {
+    fd = open(_file_name.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+  }
+  if (fd == -1)
+  {
+    perror("smash error: open failed");
+    dup2(st_output_fd, STDOUT_FILENO);
+    return;
+  }
+  Command *cmd = SmallShell::getInstance().CreateCommand(_cmd1.c_str());
+  cmd->execute();
+  close(fd);
+  dup2(st_output_fd, STDOUT_FILENO);
+}
 // PipeCommand::PipeCommand(const char *cmd_line, string cmd, vector<string> args ,vector<string> args1 ,vector<string> args2): Command(cmd),
 //                                                                                                                             _cmd_line(cmd_line),
 //                                                                                                                             _cmd(cmd),
@@ -711,6 +775,9 @@ void ExternalCommand::execute()
 //   if (fork() == 0)
 //   {
 //     close(fd[0]);
+
 //   }
-//   close(fd[1]);
+//   else{
+//     close(fd[1]);
+//   }
 // }
