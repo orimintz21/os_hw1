@@ -142,7 +142,7 @@ void JobsList::addJob(Command *cmd, bool isStopped)
   int job_id = 1;
   if (!_jobs.empty())
   {
-    job_id = _jobs.end()->first + 1;
+    job_id = (--_jobs.end())->first + 1;
   }
   JobEntry newJobEntry = JobEntry(job_id, cmd->getPid(), cmd->getCmdLine(), isStopped, cmd);
   _jobs.insert(pair<int, JobEntry>(job_id, newJobEntry));
@@ -552,6 +552,8 @@ void ForegroundCommand::execute()
     SmallShell::getInstance().setCurrentCmdPid(_job->getPid());
     SmallShell::getInstance().removeJobById(_job_id);
     waitpid(_job->getPid(), NULL, WUNTRACED);
+    SmallShell::getInstance().setCurrentCmdPid(-1);
+    SmallShell::getInstance().setCurrentCmd(nullptr);
   }
 }
 
