@@ -9,6 +9,8 @@
 #include <iomanip>
 #include "Commands.h"
 #include <signal.h>
+#include <sys/stat.h>
+#include <fstream>
 
 using namespace std;
 
@@ -63,6 +65,16 @@ bool _isBackgroundComamnd(const char *cmd_line)
 {
   const string str(cmd_line);
   return str[str.find_last_not_of(WHITESPACE)] == '&';
+}
+
+bool isInt(string &str)
+{
+  for (int i = 0; i < str.length(); i++)
+  {
+    if (isdigit(str[i]) == false)
+      return false;
+  }
+  return true;
 }
 
 void _removeBackgroundSign(char *cmd_line)
@@ -330,10 +342,14 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
   {
     return new QuitCommand(cmd, args);
   }
-  // else if (commend == "kill")
-  // {
-  //   return make_shared<KillCommand>(cmd, args);
-  // }
+  else if (commend == "kill")
+  {
+    return new KillCommand(cmd, args);
+  }
+  else if (commend == "fare")
+  {
+    return new FareCommand(cmd, args);
+  }
   else
   {
     if (inBackground)
@@ -342,24 +358,6 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
     }
     return new ExternalCommand(cmd_line, cmd, args, inBackground);
   }
-
-  // For example:
-  /*
-    string cmd_s = _trim(string(cmd_line));
-    string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
-
-    if (firstWord.compare("pwd") == 0) {
-      return new GetCurrDirCommand(cmd_line);
-    }
-    else if (firstWord.compare("showpid") == 0) {
-      return new ShowPidCommand(cmd_line);
-    }
-    else if ...
-    .....
-    else {
-      return new ExternalCommand(cmd_line);
-    }
-    */
   return nullptr;
 }
 
@@ -680,12 +678,21 @@ void ExternalCommand::execute()
         strcpy(args[i], _args[i].c_str());
       }
       args[_args.size()] = NULL;
-      execv(_args[0].c_str(), args);
+      struct stat buffer;
+      if (stat(_args[0].c_str(), &buffer) == 0)
+      {
+        execv(_args[0].c_str(), args);
+      }
 
       string bin_cmd = "/bin/" + cmd_name;
-      execv(bin_cmd.c_str(), args);
-
-      perror("smash error: >");
+      if (stat(bin_cmd.c_str(), &buffer) == 0)
+      {
+        execv(bin_cmd.c_str(), args);
+      }
+      else
+      {
+        perror("smash error: execv failed");
+      }
       exit(1);
     }
   }
@@ -833,3 +840,135 @@ void PipeCommand::execute()
   close(0);
   dup2(in, STDIN_FILENO);
 }
+
+KillCommand::KillCommand(string &cmd, vector<string> &args) : BuiltInCommand(cmd), _cmd(cmd), _sig_num(-1), _job_id(-1)
+{
+  if (args.size() != 3)
+  {
+    throw invalid_argument(args[0]);
+  }
+  if (args[1].size() < 2 || args[1][0] != '-')
+  {
+    throw invalid_argument(args[0]);
+  }
+  for (int i = 1; i < args[1].size(); i++)
+  {
+    if (!isdigit(args[1][i]))
+    {
+      throw invalid_argument(args[0]);
+    }
+  }
+  _sig_num = stoi(args[1].substr(1));
+  for (int i = 0; i < args[2].size(); i++)
+  {
+    if (!isdigit(args[2][i]))
+    {
+      throw invalid_argument(args[0]);
+    }
+  }
+  _job_id = stoi(args[2]);
+}
+
+void KillCommand::execute()
+{
+  JobsList::JobEntry *job = SmallShell::getInstance().getJobById(_job_id);
+  if (job == nullptr)
+  {
+    throw JobDoesNotExist("kill", _job_id);
+  }
+  if (kill(job->getPid(), _sig_num) == -1)
+  {
+    perror("smash error: kill failed");
+  }
+  cout << "singal number " << _sig_num << " was sent to pid " << job->getPid() << endl;
+}
+
+FareCommand::FareCommand(string &cmd, vector<string> &args) : BuiltInCommand(cmd), _cmd(cmd), _args(args)
+{
+  if (_args.size() != 4)
+  {
+    throw InvalidArguments(args[0]);
+  }
+  _file_name = _args[1];
+  _source = _args[2];
+  _destination = _args[3];
+}
+
+void FareCommand::execute()
+{
+  fstream file;
+  file.open(_file_name, ios::in);
+  if (!file.is_open())
+  {
+    throw InvalidArguments(_args[0]);
+  }
+  string line;
+  vector<string> lines;
+  while (getline(file, line))
+  {
+    lines.push_back(line);
+  }
+  file.close();
+  file.open(_file_name, ios::out);
+  int count = 0;
+  for (string l : lines)
+  {
+    if (l.find(_source) != string::npos)
+    {
+      int pos = 0;
+      while (true)
+      {
+        pos = l.find(_source, pos);
+        if (pos == string::npos)
+        {
+          break;
+        }
+        l.erase(pos, _source.size());
+        l.insert(pos, _destination);
+        pos += _destination.size();
+        count++;
+      }
+    }
+    file << l << endl;
+  }
+  file.close();
+  cout << count << " lines were changed" << endl;
+}
+
+// SetcoreCommand::SetcoreCommand(string &cmd, vector<string> &args) : BuiltInCommand(cmd), _cmd(cmd), _args(args), _core_num(-1), _job_id(-1)
+// {
+//   if (args.size() != 3)
+//   {
+//     throw InvalidArguments(args[0]);
+//   }
+//   if (!isInt(args[1]) || !isInt(args[2]))
+//   {
+//     throw InvalidArguments(args[0]);
+//   }
+//   _core_num = stoi(args[2]);
+//   _job_id = stoi(args[1]);
+// }
+
+// void SetcoreCommand::execute()
+// {
+//   JobsList::JobEntry *job = SmallShell::getInstance().getJobById(_job_id);
+//   if (job == nullptr)
+//   {
+//     throw JobDoesNotExist("setcore", _job_id);
+//   }
+//   cpu_set_t set;
+//   CPU_ZERO(&set);
+//   CPU_SET(_core_num, &set);
+//   if (sched_setaffinity(job->getPid(), sizeof(set), &set) == -1)
+//   {
+//     throw InvalidCoreNumber(_args[0]);
+//     perror("smash error: setcore failed");
+//   }
+//   cpu_set_t set2;
+//   CPU_ZERO(&set2);
+//   sched_getaffinity(job->getPid(), sizeof(set), &set2);
+//   bool did_work = CPU_ISSET(_core_num, &set);
+//   cout << did_work << endl;
+//   cout << "pid " << job->getPid() << endl;
+//   cout << "core " << _core_num << endl;
+// }

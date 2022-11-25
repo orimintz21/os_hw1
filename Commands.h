@@ -232,8 +232,14 @@ class FareCommand : public BuiltInCommand
 {
   /* Optional */
   // TODO: Add your data members
+  string _cmd;
+  vector<string> _args;
+  string _file_name;
+  string _source;
+  string _destination;
+
 public:
-  FareCommand(const char *cmd_line);
+  FareCommand(string &cmd, vector<string> &args);
   virtual ~FareCommand() {}
   void execute() override;
 };
@@ -242,22 +248,30 @@ class SetcoreCommand : public BuiltInCommand
 {
   /* Optional */
   // TODO: Add your data members
+  string _cmd;
+  vector<string> _args;
+  int _core_num;
+  int _job_id;
+
 public:
-  SetcoreCommand(const char *cmd_line);
+  SetcoreCommand(string &cmd, vector<string> &args);
   virtual ~SetcoreCommand() {}
   void execute() override;
 };
 
-// class KillCommand : public BuiltInCommand
-// {
-//   /* Bonus */
-//   // TODO: Add your data members
-// public:
-//   KillCommand(const char *cmd_line, JobsList *jobs);
-//   // KillCommand(const char *cmd_line, JobsList *jobs);
-//   virtual ~KillCommand() {}
-//   void execute() override;
-// };
+class KillCommand : public BuiltInCommand
+{
+  /* Bonus */
+  // TODO: Add your data members
+  string _cmd;
+  int _sig_num;
+  int _job_id;
+
+public:
+  KillCommand(string &cmd, vector<string> &args);
+  virtual ~KillCommand() {}
+  void execute() override;
+};
 
 class SmallShell
 {
@@ -415,4 +429,17 @@ public:
     cerr << "smash error: " + _cmd_line + ": there is no stoped jobs to resume" << endl;
   }
 };
+
+class InvalidCoreNumber : public CommandException
+{
+private:
+  string _cmd_line;
+
+public:
+  InvalidCoreNumber(string &cmd_line) : _cmd_line(cmd_line)
+  {
+    cerr << "smash error: " + _cmd_line + ": invalid core number" << endl;
+  }
+};
+
 #endif // SMASH_COMMAND_H_
