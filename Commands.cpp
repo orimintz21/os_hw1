@@ -658,7 +658,6 @@ void ExternalCommand::execute()
     }
     if (has_wild_card)
     {
-      // Todo: implement wild card
       string bash_cmd = "/bin/bash";
       if (execl(bash_cmd.c_str(), bash_cmd.c_str(), "-c", _cmd.c_str(), NULL) == -1)
       {
@@ -691,7 +690,7 @@ void ExternalCommand::execute()
       }
       else
       {
-        perror("smash error: execv failed");
+        cerr << "smash error: execv failed" << endl;
       }
       exit(1);
     }
