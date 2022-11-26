@@ -678,21 +678,11 @@ void ExternalCommand::execute()
       }
       args[_args.size()] = NULL;
       struct stat buffer;
-      if (stat(_args[0].c_str(), &buffer) == 0)
-      {
-        execv(_args[0].c_str(), args);
-      }
-
-      string bin_cmd = "/bin/" + cmd_name;
-      if (stat(bin_cmd.c_str(), &buffer) == 0)
-      {
-        execv(bin_cmd.c_str(), args);
-      }
-      else
+      if (execvp(_args[0].c_str(), args) == -1)
       {
         cerr << "smash error: execv failed" << endl;
+        exit(1);
       }
-      exit(1);
     }
   }
 
@@ -844,17 +834,17 @@ KillCommand::KillCommand(string &cmd, vector<string> &args) : BuiltInCommand(cmd
 {
   if (args.size() != 3)
   {
-    throw invalid_argument(args[0]);
+    throw InvalidArguments(args[0]);
   }
   if (args[1].size() < 2 || args[1][0] != '-')
   {
-    throw invalid_argument(args[0]);
+    throw InvalidArguments(args[0]);
   }
   for (int i = 1; i < args[1].size(); i++)
   {
     if (!isdigit(args[1][i]))
     {
-      throw invalid_argument(args[0]);
+      throw InvalidArguments(args[0]);
     }
   }
   _sig_num = stoi(args[1].substr(1));
@@ -862,7 +852,7 @@ KillCommand::KillCommand(string &cmd, vector<string> &args) : BuiltInCommand(cmd
   {
     if (!isdigit(args[2][i]))
     {
-      throw invalid_argument(args[0]);
+      throw InvalidArguments(args[0]);
     }
   }
   _job_id = stoi(args[2]);
