@@ -471,7 +471,7 @@ void GetCurrDirCommand::execute()
   std::cout << _currentDir << std::endl;
 }
 
-ChangeDirCommand::ChangeDirCommand(string cmd_line, vector<string> &args) : BuiltInCommand(cmd_line), _dir("")
+ChangeDirCommand::ChangeDirCommand(string cmd_line, vector<string> &args) : BuiltInCommand(cmd_line), _dir(""), _args(args)
 {
   if (args.size() == 1)
   {
@@ -504,9 +504,22 @@ ChangeDirCommand::ChangeDirCommand(string cmd_line, vector<string> &args) : Buil
 }
 void ChangeDirCommand::execute()
 {
+  if (_dir == SmallShell::getInstance().getCurrentDir())
+  {
+    return;
+  }
   if (chdir(_dir.c_str()) == 0)
   {
     SmallShell::getInstance().goToDir(_dir);
+    if (_args[1] == "-")
+    {
+      string temp = SmallShell::getInstance().getCurrentDir();
+      SmallShell::getInstance().setPreDir(temp);
+    }
+    char *pwd = getcwd(NULL, 0);
+    string current_dir = pwd;
+    free(pwd);
+    SmallShell::getInstance().setCurrentDir(current_dir);
   }
   else
   {

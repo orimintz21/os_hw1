@@ -106,6 +106,7 @@ class ChangeDirCommand : public BuiltInCommand
 {
   // TODO: Add your data members public:
   string _dir;
+  vector<string> _args;
 
 public:
   ChangeDirCommand(string cmd_line, vector<string> &args);
@@ -301,7 +302,7 @@ public:
   string &getPrompt();
   string &getPreDir();
   string &getCurrentDir();
-  void setPreDir(string &dir);
+  void setPreDir(string &dir) { _preDir = dir; }
   void setCurrentDir(string &dir);
   void setPrompt(string newPrompt) { _prompt = newPrompt; }
   vector<string> convertToVector(const char *cmd_line);
