@@ -504,10 +504,6 @@ ChangeDirCommand::ChangeDirCommand(string cmd_line, vector<string> &args) : Buil
 }
 void ChangeDirCommand::execute()
 {
-  if (_dir == SmallShell::getInstance().getCurrentDir())
-  {
-    return;
-  }
   if (chdir(_dir.c_str()) == 0)
   {
     SmallShell::getInstance().goToDir(_dir);
