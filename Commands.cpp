@@ -865,6 +865,13 @@ void KillCommand::execute()
   {
     throw JobDoesNotExist("kill", _job_id);
   }
+  if (SIGCONT == _sig_num)
+  {
+    if (job->isStopped())
+    {
+      job->setStopped(false);
+    }
+  }
   if (kill(job->getPid(), _sig_num) == -1)
   {
     perror("smash error: kill failed");
