@@ -14,7 +14,15 @@ void ctrlZHandler(int sig_num)
   {
     kill(pid, SIGSTOP);
     Command *cmd = SmallShell::getInstance().getCurrentCmd();
-    SmallShell::getInstance().addJob(cmd, true);
+    int job_id = SmallShell::getInstance().getCurrentJobId();
+    if (job_id == -1)
+    {
+      SmallShell::getInstance().addJob(cmd, true);
+    }
+    else
+    {
+      SmallShell::getInstance().addJobWihId(cmd, job_id, true);
+    }
     SmallShell::getInstance().setCurrentCmdPid(-1);
     SmallShell::getInstance().setCurrentCmd(nullptr);
 

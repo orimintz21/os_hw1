@@ -170,6 +170,13 @@ void JobsList::addJob(Command *cmd, bool isStopped)
   _jobs.insert(pair<int, JobEntry>(job_id, newJobEntry));
 }
 
+void JobsList::addJobWithId(Command *cmd, int id, bool isStopped)
+{
+  removeFinishedJobs();
+  JobEntry newJobEntry = JobEntry(id, cmd->getPid(), cmd->getCmdLine(), isStopped, cmd);
+  _jobs.insert(pair<int, JobEntry>(id, newJobEntry));
+}
+
 void JobsList::printJobsList()
 {
   removeFinishedJobs();
@@ -180,7 +187,7 @@ void JobsList::printJobsList()
     cout << "[" << cm.first << "] " << cm.second.getCommand() << " : " << cm.second.getPid() << " " << int(seconds) << " secs";
     if (cm.second.isStopped())
     {
-      cout << "stopped";
+      cout << " stopped";
     }
     cout << endl;
   }
@@ -574,10 +581,12 @@ void ForegroundCommand::execute()
     cout << _job->getCommand() << " : " << _job->getPid() << endl;
     SmallShell::getInstance().setCurrentCmd(_job->getCmd());
     SmallShell::getInstance().setCurrentCmdPid(_job->getPid());
+    SmallShell::getInstance().setCurrentJobId(_job_id);
     SmallShell::getInstance().removeJobById(_job_id);
     waitpid(_job->getPid(), NULL, WUNTRACED);
     SmallShell::getInstance().setCurrentCmdPid(-1);
     SmallShell::getInstance().setCurrentCmd(nullptr);
+    SmallShell::getInstance().setCurrentJobId(-1);
   }
 }
 
@@ -711,9 +720,11 @@ void ExternalCommand::execute()
     {
       SmallShell::getInstance().setCurrentCmd(this);
       SmallShell::getInstance().setCurrentCmdPid(this->getPid());
+      SmallShell::getInstance().setCurrentJobId(-1);
       waitpid(pid, NULL, WUNTRACED);
       SmallShell::getInstance().setCurrentCmd(nullptr);
       SmallShell::getInstance().setCurrentCmdPid(-1);
+      SmallShell::getInstance().setCurrentJobId(-1);
     }
   }
 }

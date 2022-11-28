@@ -177,6 +177,7 @@ public:
   JobsList() = default;
   ~JobsList() = default;
   void addJob(Command *cmd, bool isStopped = false);
+  void addJobWithId(Command *cmd, int id, bool isStopped = false);
   void printJobsList();
   void killAllJobs();
   void removeFinishedJobs();
@@ -284,6 +285,7 @@ private:
   JobsList _jobsList;
   pid_t _current_cmd_pid;
   Command *_current_cmd;
+  int _current_job_id;
   SmallShell();
 
 public:
@@ -315,11 +317,14 @@ public:
   void removeJobById(int job_id) { _jobsList.removeJobById(job_id); }
   void killAllJobs() { _jobsList.killAllJobs(); }
   void addJob(Command *cmd, bool isStopped = false) { _jobsList.addJob(cmd, isStopped); }
+  void addJobWihId(Command *cmd, int id, bool isStopped = false) { _jobsList.addJobWithId(cmd, id, isStopped); }
   string setFullCmd(string &cmd);
   void sendControlC();
   int getCurrentCmdPid() const { return _current_cmd_pid; }
   void setCurrentCmdPid(int cmd_pid) { _current_cmd_pid = cmd_pid; }
   Command *getCurrentCmd() const { return _current_cmd; }
+  void setCurrentJobId(int job_id) { _current_job_id = job_id; }
+  int getCurrentJobId() const { return _current_job_id; }
   void setCurrentCmd(Command *cmd) { _current_cmd = cmd; }
   bool isRedirectionCommand(string &cmd, int &index, bool &is_append);
   bool isPipeCommand(string &cmd, int &index, bool &is_err);
