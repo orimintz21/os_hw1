@@ -373,6 +373,10 @@ void SmallShell::executeCommand(const char *cmd_line)
   // TODO: Add your implementation here
   // for example:
   Command *cmd = CreateCommand(cmd_line);
+  if (cmd == nullptr)
+  {
+    return;
+  }
   cmd->execute();
   // Please note that you must fork smash process for some commands (e.g., external commands....)
 }
@@ -916,7 +920,8 @@ void FareCommand::execute()
   file.open(_file_name, ios::in);
   if (!file.is_open())
   {
-    throw InvalidArguments(_args[0]);
+    cerr << "smash error: open failed" << endl;
+    return;
   }
   string line;
   vector<string> lines;
@@ -925,7 +930,12 @@ void FareCommand::execute()
     lines.push_back(line);
   }
   file.close();
-  file.open(_file_name, ios::out);
+  file.open(_file_name, ios::out | ios::trunc);
+  if (!file.is_open())
+  {
+    cerr << "smash error: open failed" << endl;
+    return;
+  }
   int count = 0;
   for (string l : lines)
   {
