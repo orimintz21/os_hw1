@@ -368,10 +368,6 @@ public:
   }
 };
 
-class DirDoesNotExist : public CommandException
-{
-};
-
 class JobsListIsEmpty : public CommandException
 {
 private:

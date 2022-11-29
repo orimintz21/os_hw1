@@ -190,7 +190,10 @@ void JobsList::killAllJobs()
   for (auto cm : _jobs)
   {
     cout << cm.second.getPid() << ": " << cm.second.getCommand() << endl;
-    kill(cm.second.getPid(), SIGKILL);
+    if (kill(cm.second.getPid(), SIGKILL) == -1)
+    {
+      perror("smash error: kill failed");
+    }
   }
   removeFinishedJobs();
 }
@@ -518,8 +521,8 @@ void ChangeDirCommand::execute()
     SmallShell::getInstance().goToDir(_dir);
     if (_args[1] == "-")
     {
-      string temp = SmallShell::getInstance().getCurrentDir();
-      SmallShell::getInstance().setPreDir(temp);
+      // string temp = SmallShell::getInstance().getCurrentDir();
+      // SmallShell::getInstance().setPreDir(temp);
     }
     char *pwd = getcwd(NULL, 0);
     string current_dir = pwd;
@@ -528,7 +531,7 @@ void ChangeDirCommand::execute()
   }
   else
   {
-    throw DirDoesNotExist();
+    perror("smash error: chdir failed");
   }
 }
 
@@ -578,7 +581,10 @@ void ForegroundCommand::execute()
     if (_job->isStopped())
     {
       _job->setStopped(false);
-      kill(_job->getPid(), SIGCONT);
+      if (kill(_job->getPid(), SIGCONT) == -1)
+      {
+        perror("smash error: kill failed");
+      }
     }
     cout << _job->getCommand() << " : " << _job->getPid() << endl;
     SmallShell::getInstance().setCurrentCmd(_job->getCmd());
@@ -605,13 +611,6 @@ BackgroundCommand::BackgroundCommand(string &cmd_without_changes, string cmd_lin
   }
   else if (args.size() == 2)
   {
-    // for (int i = 0; i < args[1].size(); i++)
-    // {
-    //   if (!isdigit(args[1][i]))
-    //   {
-    //     throw InvalidArguments(args[0]);
-    //   }
-    // }
     try
     {
       _job_id = stoi(args[1]);
@@ -632,7 +631,7 @@ BackgroundCommand::BackgroundCommand(string &cmd_without_changes, string cmd_lin
   }
   if (args.size() > 2)
   {
-    throw DefaultError(cmd_line);
+    throw InvalidArguments(args[0]);
   }
 }
 
@@ -640,7 +639,10 @@ void BackgroundCommand::execute()
 {
   std::cout << _job->getCommand() << " : " << to_string(_job->getPid()) << endl;
   _job->setStopped(false);
-  kill(_job->getPid(), SIGCONT);
+  if (kill(_job->getPid(), SIGCONT) == -1)
+  {
+    cout << "smash error: kill failed" << endl;
+  }
 }
 
 QuitCommand::QuitCommand(string &cmd_without_changes, string cmd_line, vector<string> &args) : BuiltInCommand(cmd_without_changes), _kill(false)
@@ -693,20 +695,16 @@ void ExternalCommand::execute()
     }
     else
     {
-      char **args = new char *[_args.size() + 1];
-      string cmd_name = _args[0].substr(_args[0].find_last_of('/') + 1);
-      args[0] = new char[cmd_name.size() + 1];
-      strcpy(args[0], cmd_name.c_str());
-      for (int i = 1; i < _args.size(); ++i)
+      vector<const char *> all_args;
+      for (int i = 0; i < _args.size(); ++i)
       {
-        args[i] = new char[_args[i].size() + 1];
-        strcpy(args[i], _args[i].c_str());
+        all_args.push_back(_args[i].c_str());
       }
-      args[_args.size()] = NULL;
-      execv(_cmd.c_str(), args);
-      if (execvp(_args[0].c_str(), args) == -1)
+      all_args.push_back(nullptr);
+
+      if (execvp(_args[0].c_str(), const_cast<char *const *>(all_args.data())) == -1)
       {
-        cerr << "smash error: execv failed" << endl;
+        perror("smash error: execv failed");
         exit(1);
       }
     }
@@ -753,11 +751,11 @@ void RedirectionCommand::execute()
   int fd;
   if (_append)
   {
-    fd = open(_file_name.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0666);
+    fd = open(_file_name.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0777);
   }
   else
   {
-    fd = open(_file_name.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    fd = open(_file_name.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0777);
   }
   if (fd == -1)
   {
@@ -765,8 +763,18 @@ void RedirectionCommand::execute()
     dup2(st_output_fd, STDOUT_FILENO);
     return;
   }
-  Command *cmd = SmallShell::getInstance().CreateCommand(_cmd1.c_str());
-  cmd->execute();
+  try
+  {
+    Command *cmd = SmallShell::getInstance().CreateCommand(_cmd1.c_str());
+    if (cmd == nullptr)
+    {
+      throw InvalidArguments(_cmd1);
+    }
+    cmd->execute();
+  }
+  catch (CommandException &e)
+  {
+  }
   close(fd);
   dup2(st_output_fd, STDOUT_FILENO);
 }
@@ -920,9 +928,16 @@ void KillCommand::execute()
       job->setStopped(false);
     }
   }
+  if (_sig_num == SIGSTOP)
+  {
+    if (!job->isStopped())
+    {
+      job->setStopped(true);
+    }
+  }
   if (kill(job->getPid(), _sig_num) == -1)
   {
-    cout << "smash error: kill failed" << endl;
+    perror("smash error: kill failed");
   }
   cout << "signal number " << _sig_num << " was sent to pid " << job->getPid() << endl;
 }
@@ -944,7 +959,7 @@ void FareCommand::execute()
   file.open(_file_name, ios::in);
   if (!file.is_open())
   {
-    cerr << "smash error: open failed" << endl;
+    perror("smash error: open failed");
     return;
   }
   string line;
@@ -957,7 +972,7 @@ void FareCommand::execute()
   file.open(_file_name, ios::out | ios::trunc);
   if (!file.is_open())
   {
-    cerr << "smash error: open failed" << endl;
+    perror("smash error: open failed");
     return;
   }
   int count = 0;
@@ -1032,5 +1047,8 @@ void SetcoreCommand::execute()
   }
   cpu_set_t set2;
   CPU_ZERO(&set2);
-  sched_getaffinity(job->getPid(), sizeof(set), &set2);
+  if (sched_getaffinity(job->getPid(), sizeof(set2), &set2) == -1)
+  {
+    perror("smash error: setcore failed");
+  }
 }
