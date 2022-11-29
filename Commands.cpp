@@ -9,8 +9,8 @@
 #include <iomanip>
 #include "Commands.h"
 #include <signal.h>
-#include <sys/stat.h>
 #include <fstream>
+#include <thread>
 
 using namespace std;
 
@@ -357,6 +357,10 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
   {
     return new FareCommand(cmd, args);
   }
+  else if (commend == "setcore")
+  {
+    return new SetcoreCommand(cmd, args);
+  }
   else
   {
     if (inBackground)
@@ -699,7 +703,7 @@ void ExternalCommand::execute()
         strcpy(args[i], _args[i].c_str());
       }
       args[_args.size()] = NULL;
-      struct stat buffer;
+      execv(_cmd.c_str(), args);
       if (execvp(_args[0].c_str(), args) == -1)
       {
         cerr << "smash error: execv failed" << endl;
@@ -961,40 +965,40 @@ void FareCommand::execute()
   cout << count << " lines were changed" << endl;
 }
 
-// SetcoreCommand::SetcoreCommand(string &cmd, vector<string> &args) : BuiltInCommand(cmd), _cmd(cmd), _args(args), _core_num(-1), _job_id(-1)
-// {
-//   if (args.size() != 3)
-//   {
-//     throw InvalidArguments(args[0]);
-//   }
-//   if (!isInt(args[1]) || !isInt(args[2]))
-//   {
-//     throw InvalidArguments(args[0]);
-//   }
-//   _core_num = stoi(args[2]);
-//   _job_id = stoi(args[1]);
-// }
+SetcoreCommand::SetcoreCommand(string &cmd, vector<string> &args) : BuiltInCommand(cmd), _cmd(cmd), _args(args), _core_num(-1), _job_id(-1)
+{
+  if (args.size() != 3)
+  {
+    throw InvalidArguments(args[0]);
+  }
+  if (!isInt(args[1]) || !isInt(args[2]))
+  {
+    throw InvalidArguments(args[0]);
+  }
+  _core_num = stoi(args[2]);
+  _job_id = stoi(args[1]);
+}
 
-// void SetcoreCommand::execute()
-// {
-//   JobsList::JobEntry *job = SmallShell::getInstance().getJobById(_job_id);
-//   if (job == nullptr)
-//   {
-//     throw JobDoesNotExist("setcore", _job_id);
-//   }
-//   cpu_set_t set;
-//   CPU_ZERO(&set);
-//   CPU_SET(_core_num, &set);
-//   if (sched_setaffinity(job->getPid(), sizeof(set), &set) == -1)
-//   {
-//     throw InvalidCoreNumber(_args[0]);
-//     perror("smash error: setcore failed");
-//   }
-//   cpu_set_t set2;
-//   CPU_ZERO(&set2);
-//   sched_getaffinity(job->getPid(), sizeof(set), &set2);
-//   bool did_work = CPU_ISSET(_core_num, &set);
-//   cout << did_work << endl;
-//   cout << "pid " << job->getPid() << endl;
-//   cout << "core " << _core_num << endl;
-// }
+void SetcoreCommand::execute()
+{
+  const auto core_num = std::thread::hardware_concurrency();
+  JobsList::JobEntry *job = SmallShell::getInstance().getJobById(_job_id);
+  if (job == nullptr)
+  {
+    throw JobDoesNotExist("setcore", _job_id);
+  }
+  if (_core_num < 0 || _core_num >= core_num)
+  {
+    throw InvalidCoreNumber(_args[0]);
+  }
+  cpu_set_t set;
+  CPU_ZERO(&set);
+  CPU_SET(_core_num, &set);
+  if (sched_setaffinity(job->getPid(), sizeof(set), &set) == -1)
+  {
+    perror("smash error: setcore failed");
+  }
+  cpu_set_t set2;
+  CPU_ZERO(&set2);
+  sched_getaffinity(job->getPid(), sizeof(set), &set2);
+}

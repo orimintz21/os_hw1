@@ -435,4 +435,16 @@ public:
     cerr << "smash error: " + _cmd_line + ": there is no stoped jobs to resume" << endl;
   }
 };
+
+class InvalidCoreNumber : public CommandException
+{
+private:
+  string _cmd_line;
+
+public:
+  InvalidCoreNumber(string &cmd) : _cmd_line(cmd)
+  {
+    cerr << "smash error: " + _cmd_line + ": invalid core number" << endl;
+  }
+};
 #endif // SMASH_COMMAND_H_
