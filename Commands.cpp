@@ -67,16 +67,6 @@ bool _isBackgroundComamnd(const char *cmd_line)
   return str[str.find_last_not_of(WHITESPACE)] == '&';
 }
 
-bool isInt(string &str)
-{
-  for (int i = 0; i < str.length(); i++)
-  {
-    if (isdigit(str[i]) == false)
-      return false;
-  }
-  return true;
-}
-
 void _removeBackgroundSign(char *cmd_line)
 {
   const string str(cmd_line);
@@ -187,7 +177,7 @@ void JobsList::printJobsList()
     cout << "[" << cm.first << "] " << cm.second.getCommand() << " : " << cm.second.getPid() << " " << int(seconds) << " secs";
     if (cm.second.isStopped())
     {
-      cout << " stopped";
+      cout << " (stopped)";
     }
     cout << endl;
   }
@@ -287,7 +277,11 @@ SmallShell::~SmallShell()
  */
 Command *SmallShell::CreateCommand(const char *cmd_line)
 {
-
+  if (cmd_line == nullptr)
+  {
+    return nullptr;
+  }
+  string cmd_without_changes = string(cmd_line);
   bool inBackground = _isBackgroundComamnd(cmd_line);
   shared_ptr<char> cmd_cpy(new char[strlen(cmd_line) + 1]);
   strcpy(cmd_cpy.get(), cmd_line);
@@ -312,54 +306,54 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
     return new PipeCommand(cmd, args1, cmd1, args2, cmd2, sec_inp);
   }
   vector<string> args = convertToVector(cmd_cpy.get());
-  if (args.size() == 0)
+  if (args.empty())
   {
     return nullptr;
   }
   string commend = args[0];
   if (commend == "chprompt")
   {
-    return new ChpromptCommand(cmd, args);
+    return new ChpromptCommand(cmd_without_changes, cmd, args);
   }
   else if (commend == "showpid")
   {
-    return new ShowPidCommand(cmd, args);
+    return new ShowPidCommand(cmd_without_changes, cmd, args);
   }
   else if (commend == "pwd")
   {
-    return new GetCurrDirCommand(cmd, args);
+    return new GetCurrDirCommand(cmd_without_changes, cmd, args);
   }
   else if (commend == "cd")
   {
-    return new ChangeDirCommand(cmd, args);
+    return new ChangeDirCommand(cmd_without_changes, cmd, args);
   }
   else if (commend == "jobs")
   {
-    return new JobsCommand(cmd, args);
+    return new JobsCommand(cmd_without_changes, cmd, args);
   }
   else if (commend == "fg")
   {
-    return new ForegroundCommand(cmd, args);
+    return new ForegroundCommand(cmd_without_changes, cmd, args);
   }
   else if (commend == "bg")
   {
-    return new BackgroundCommand(cmd, args);
+    return new BackgroundCommand(cmd_without_changes, cmd, args);
   }
   else if (commend == "quit")
   {
-    return new QuitCommand(cmd, args);
+    return new QuitCommand(cmd_without_changes, cmd, args);
   }
   else if (commend == "kill")
   {
-    return new KillCommand(cmd, args);
+    return new KillCommand(cmd_without_changes, cmd, args);
   }
   else if (commend == "fare")
   {
-    return new FareCommand(cmd, args);
+    return new FareCommand(cmd_without_changes, cmd, args);
   }
   else if (commend == "setcore")
   {
-    return new SetcoreCommand(cmd, args);
+    return new SetcoreCommand(cmd_without_changes, cmd, args);
   }
   else
   {
@@ -367,7 +361,7 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
     {
       cmd += "&";
     }
-    return new ExternalCommand(cmd_line, cmd, args, inBackground);
+    return new ExternalCommand(cmd_without_changes, cmd, args, inBackground);
   }
   return nullptr;
 }
@@ -439,7 +433,7 @@ string SmallShell::setFullCmd(string &cmd)
   return ans;
 }
 
-ChpromptCommand::ChpromptCommand(string cmd_line, vector<string> &args) : BuiltInCommand(cmd_line)
+ChpromptCommand::ChpromptCommand(string &cmd_without_changes, string cmd_line, vector<string> &args) : BuiltInCommand(cmd_line)
 {
   if (args.size() == 1)
   {
@@ -466,7 +460,7 @@ void ChpromptCommand::execute()
   SmallShell::getInstance().setPrompt(_newPrompt);
 }
 
-ShowPidCommand::ShowPidCommand(string cmd_line, vector<string> &args) : BuiltInCommand(cmd_line)
+ShowPidCommand::ShowPidCommand(string &cmd_without_changes, string cmd_line, vector<string> &args) : BuiltInCommand(cmd_without_changes)
 {
   _newPid = getpid();
 }
@@ -475,7 +469,7 @@ void ShowPidCommand::execute()
   std::cout << "smash pid is " << int(_newPid) << endl;
 }
 
-GetCurrDirCommand::GetCurrDirCommand(string cmd_line, vector<string> &args) : BuiltInCommand(cmd_line)
+GetCurrDirCommand::GetCurrDirCommand(string &cmd_without_changes, string cmd_line, vector<string> &args) : BuiltInCommand(cmd_without_changes)
 {
   char *pwd = getcwd(NULL, 0);
   _currentDir = pwd;
@@ -486,11 +480,11 @@ void GetCurrDirCommand::execute()
   std::cout << _currentDir << std::endl;
 }
 
-ChangeDirCommand::ChangeDirCommand(string cmd_line, vector<string> &args) : BuiltInCommand(cmd_line), _dir(""), _args(args)
+ChangeDirCommand::ChangeDirCommand(string &cmd_without_changes, string cmd_line, vector<string> &args) : BuiltInCommand(cmd_without_changes), _dir(""), _args(args)
 {
   if (args.size() == 1)
   {
-    throw InvalidArguments(cmd_line);
+    throw InvalidArguments(args[0]);
   }
   else if (args.size() == 2)
   {
@@ -538,14 +532,14 @@ void ChangeDirCommand::execute()
   }
 }
 
-JobsCommand::JobsCommand(string cmd_line, vector<string> &args) : BuiltInCommand(cmd_line) {}
+JobsCommand::JobsCommand(string &cmd_without_changes, string cmd_line, vector<string> &args) : BuiltInCommand(cmd_without_changes) {}
 
 void JobsCommand::execute()
 {
   SmallShell::getInstance().printJobsList();
 }
 
-ForegroundCommand::ForegroundCommand(string cmd_line, vector<string> &args) : BuiltInCommand(cmd_line), _job(nullptr), _job_id(0)
+ForegroundCommand::ForegroundCommand(string &cmd_without_changes, string cmd_line, vector<string> &args) : BuiltInCommand(cmd_without_changes), _job(nullptr), _job_id(0)
 {
   if (args.size() == 1)
   {
@@ -557,17 +551,17 @@ ForegroundCommand::ForegroundCommand(string cmd_line, vector<string> &args) : Bu
   }
   else if (args.size() > 2)
   {
-    throw InvalidArguments(cmd_line);
+    throw InvalidArguments(args[0]);
   }
   else
   {
-    for (int i = 0; i < args[1].size(); i++)
+    try
     {
-      if (!isdigit(args[1][i]))
-      {
-        throw InvalidArguments(cmd_line);
-      }
       _job_id = stoi(args[1]);
+    }
+    catch (const std::invalid_argument &ia)
+    {
+      throw InvalidArguments(args[0]);
     }
     _job = SmallShell::getInstance().getJobById(_job_id);
   }
@@ -598,7 +592,7 @@ void ForegroundCommand::execute()
   }
 }
 
-BackgroundCommand::BackgroundCommand(string cmd_line, vector<string> &args) : BuiltInCommand(cmd_line)
+BackgroundCommand::BackgroundCommand(string &cmd_without_changes, string cmd_line, vector<string> &args) : BuiltInCommand(cmd_without_changes)
 {
 
   if (args.size() == 1)
@@ -611,14 +605,21 @@ BackgroundCommand::BackgroundCommand(string cmd_line, vector<string> &args) : Bu
   }
   else if (args.size() == 2)
   {
-    for (int i = 0; i < args[1].size(); i++)
+    // for (int i = 0; i < args[1].size(); i++)
+    // {
+    //   if (!isdigit(args[1][i]))
+    //   {
+    //     throw InvalidArguments(args[0]);
+    //   }
+    // }
+    try
     {
-      if (!isdigit(args[1][i]))
-      {
-        throw InvalidArguments(cmd_line);
-      }
+      _job_id = stoi(args[1]);
     }
-    _job_id = stoi(args[1]);
+    catch (std::invalid_argument &e)
+    {
+      throw InvalidArguments(args[0]);
+    }
     _job = SmallShell::getInstance().getJobById(_job_id);
     if (!_job)
     {
@@ -637,12 +638,12 @@ BackgroundCommand::BackgroundCommand(string cmd_line, vector<string> &args) : Bu
 
 void BackgroundCommand::execute()
 {
-  std::cout << _cmd_line << ":" << to_string(_job->getPid()) << endl;
+  std::cout << _job->getCommand() << " : " << to_string(_job->getPid()) << endl;
   _job->setStopped(false);
   kill(_job->getPid(), SIGCONT);
 }
 
-QuitCommand::QuitCommand(string cmd_line, vector<string> &args) : BuiltInCommand(cmd_line), _kill(false)
+QuitCommand::QuitCommand(string &cmd_without_changes, string cmd_line, vector<string> &args) : BuiltInCommand(cmd_without_changes), _kill(false)
 {
   if (args.size() > 1)
   {
@@ -662,10 +663,9 @@ void QuitCommand::execute()
   exit(0);
 }
 
-ExternalCommand::ExternalCommand(const char *cmd_line, string cmd, vector<string> args, bool is_background) : Command(cmd),
-                                                                                                              _cmd_line(cmd_line),
-                                                                                                              _cmd(cmd), _args(args),
-                                                                                                              _is_background(is_background) {}
+ExternalCommand::ExternalCommand(string &cmd_without_changes, string cmd, vector<string> args, bool is_background) : Command(cmd_without_changes),
+                                                                                                                     _cmd(cmd), _args(args),
+                                                                                                                     _is_background(is_background) {}
 
 void ExternalCommand::execute()
 {
@@ -858,7 +858,7 @@ void PipeCommand::execute()
   dup2(in, STDIN_FILENO);
 }
 
-KillCommand::KillCommand(string &cmd, vector<string> &args) : BuiltInCommand(cmd), _cmd(cmd), _sig_num(-1), _job_id(-1)
+KillCommand::KillCommand(string &cmd_without_changes, string &cmd, vector<string> &args) : BuiltInCommand(cmd_without_changes), _cmd(cmd), _sig_num(-1), _job_id(-1)
 {
   if (args.size() != 3)
   {
@@ -868,22 +868,37 @@ KillCommand::KillCommand(string &cmd, vector<string> &args) : BuiltInCommand(cmd
   {
     throw InvalidArguments(args[0]);
   }
-  for (int i = 1; i < args[1].size(); i++)
+  try
   {
-    if (!isdigit(args[1][i]))
-    {
-      throw InvalidArguments(args[0]);
-    }
+    _sig_num = stoi(args[1].substr(1));
   }
+  catch (exception &e)
+  {
+    throw InvalidArguments(args[0]);
+  }
+  // for (int i = 1; i < args[1].size(); i++)
+  // {
+  //   if (!isdigit(args[1][i]))
+  //   {
+  //     throw InvalidArguments(args[0]);
+  //   }
+  // }
   _sig_num = stoi(args[1].substr(1));
-  for (int i = 0; i < args[2].size(); i++)
+  // for (int i = 0; i < args[2].size(); i++)
+  // {
+  //   if (!isdigit(args[2][i]))
+  //   {
+  //     throw InvalidArguments(args[0]);
+  //   }
+  // }
+  try
   {
-    if (!isdigit(args[2][i]))
-    {
-      throw InvalidArguments(args[0]);
-    }
+    _job_id = stoi(args[2]);
   }
-  _job_id = stoi(args[2]);
+  catch (invalid_argument &e)
+  {
+    throw InvalidArguments(args[0]);
+  }
 }
 
 void KillCommand::execute()
@@ -892,6 +907,11 @@ void KillCommand::execute()
   if (job == nullptr)
   {
     throw JobDoesNotExist("kill", _job_id);
+  }
+  if (_sig_num < 1 || _sig_num > 31)
+  {
+    string a = "kill";
+    throw InvalidArguments(a);
   }
   if (SIGCONT == _sig_num)
   {
@@ -902,12 +922,12 @@ void KillCommand::execute()
   }
   if (kill(job->getPid(), _sig_num) == -1)
   {
-    perror("smash error: kill failed");
+    cout << "smash error: kill failed" << endl;
   }
-  cout << "singal number " << _sig_num << " was sent to pid " << job->getPid() << endl;
+  cout << "signal number " << _sig_num << " was sent to pid " << job->getPid() << endl;
 }
 
-FareCommand::FareCommand(string &cmd, vector<string> &args) : BuiltInCommand(cmd), _cmd(cmd), _args(args)
+FareCommand::FareCommand(string &cmd_without_changes, string &cmd, vector<string> &args) : BuiltInCommand(cmd_without_changes), _cmd(cmd), _args(args)
 {
   if (_args.size() != 4)
   {
@@ -965,13 +985,25 @@ void FareCommand::execute()
   cout << count << " lines were changed" << endl;
 }
 
-SetcoreCommand::SetcoreCommand(string &cmd, vector<string> &args) : BuiltInCommand(cmd), _cmd(cmd), _args(args), _core_num(-1), _job_id(-1)
+SetcoreCommand::SetcoreCommand(string &cmd_without_changes, string &cmd, vector<string> &args) : BuiltInCommand(cmd_without_changes), _cmd(cmd), _args(args), _core_num(-1), _job_id(-1)
 {
   if (args.size() != 3)
   {
     throw InvalidArguments(args[0]);
   }
-  if (!isInt(args[1]) || !isInt(args[2]))
+  try
+  {
+    _core_num = stoi(args[2]);
+  }
+  catch (invalid_argument &e)
+  {
+    throw InvalidArguments(args[0]);
+  }
+  try
+  {
+    _job_id = stoi(args[1]);
+  }
+  catch (invalid_argument &e)
   {
     throw InvalidArguments(args[0]);
   }

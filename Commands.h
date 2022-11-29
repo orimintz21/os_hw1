@@ -47,13 +47,12 @@ public:
 class ExternalCommand : public Command
 {
 private:
-  const char *_cmd_line;
   string _cmd;
   vector<string> _args;
   bool _is_background;
 
 public:
-  ExternalCommand(const char *cmd_line, string cmd, vector<string> args, bool is_background);
+  ExternalCommand(string &cmd_without_changes, string cmd, vector<string> args, bool is_background);
   virtual ~ExternalCommand() {}
   void execute() override;
 };
@@ -79,7 +78,7 @@ private:
   string _newPrompt;
 
 public:
-  ChpromptCommand(string cmd_line, vector<string> &args);
+  ChpromptCommand(string &cmd_without_changes, string cmd_line, vector<string> &args);
   explicit ChpromptCommand(vector<string> args);
   virtual ~ChpromptCommand() {}
   void execute() override;
@@ -109,7 +108,7 @@ class ChangeDirCommand : public BuiltInCommand
   vector<string> _args;
 
 public:
-  ChangeDirCommand(string cmd_line, vector<string> &args);
+  ChangeDirCommand(string &cmd_without_changes, string cmd_line, vector<string> &args);
   void execute() override;
 };
 
@@ -119,7 +118,7 @@ private:
   string _currentDir;
 
 public:
-  GetCurrDirCommand(string cmd_line, vector<string> &args);
+  GetCurrDirCommand(string &cmd_without_changes, string cmd_line, vector<string> &args);
   virtual ~GetCurrDirCommand() {}
   void execute() override;
 };
@@ -128,12 +127,11 @@ class ShowPidCommand : public BuiltInCommand
 {
 public:
   pid_t _newPid;
-  ShowPidCommand(string cmd_line, vector<string> &args);
+  ShowPidCommand(string &cmd_without_changes, string cmd_line, vector<string> &args);
   virtual ~ShowPidCommand() {}
   void execute() override;
 };
 
-class JobsList;
 class QuitCommand : public BuiltInCommand
 {
   // TODO: Add your data members
@@ -141,7 +139,7 @@ class QuitCommand : public BuiltInCommand
   bool _kill;
 
 public:
-  QuitCommand(string cmd_line, vector<string> &args);
+  QuitCommand(string &cmd_without_changes, string cmd_line, vector<string> &args);
   virtual ~QuitCommand() {}
   void execute() override;
 };
@@ -192,7 +190,7 @@ class JobsCommand : public BuiltInCommand
 {
   // TODO: Add your data members
 public:
-  JobsCommand(string cmd_line, vector<string> &args);
+  JobsCommand(string &cmd_without_changes, string cmd_line, vector<string> &args);
   virtual ~JobsCommand() {}
   void execute() override;
 };
@@ -204,7 +202,7 @@ class ForegroundCommand : public BuiltInCommand
   int _job_id;
 
 public:
-  ForegroundCommand(string cmd_line, vector<string> &args);
+  ForegroundCommand(string &cmd_without_changes, string cmd_line, vector<string> &args);
   virtual ~ForegroundCommand() {}
   void execute() override;
 };
@@ -215,20 +213,20 @@ class BackgroundCommand : public BuiltInCommand
   int _job_id;
   // TODO: Add your data members
 public:
-  BackgroundCommand(string cmd_line, vector<string> &args);
+  BackgroundCommand(string &cmd_without_changes, string cmd_line, vector<string> &args);
   virtual ~BackgroundCommand() {}
   void execute() override;
 };
 
-class TimeoutCommand : public BuiltInCommand
-{
-  /* Optional */
-  // TODO: Add your data members
-public:
-  explicit TimeoutCommand(const char *cmd_line);
-  virtual ~TimeoutCommand() {}
-  void execute() override;
-};
+// class TimeoutCommand : public BuiltInCommand
+// {
+//   /* Optional */
+//   // TODO: Add your data members
+// public:
+//   explicit TimeoutCommand(const char *cmd_line);
+//   virtual ~TimeoutCommand() {}
+//   void execute() override;
+// };
 
 class FareCommand : public BuiltInCommand
 {
@@ -241,7 +239,7 @@ class FareCommand : public BuiltInCommand
   string _destination;
 
 public:
-  FareCommand(string &cmd, vector<string> &args);
+  FareCommand(string &cmd_without_changes, string &cmd, vector<string> &args);
   virtual ~FareCommand() {}
   void execute() override;
 };
@@ -256,7 +254,7 @@ class SetcoreCommand : public BuiltInCommand
   int _job_id;
 
 public:
-  SetcoreCommand(string &cmd, vector<string> &args);
+  SetcoreCommand(string &cmd_without_changes, string &cmd, vector<string> &args);
   virtual ~SetcoreCommand() {}
   void execute() override;
 };
@@ -270,7 +268,7 @@ class KillCommand : public BuiltInCommand
   int _job_id;
 
 public:
-  KillCommand(string &cmd, vector<string> &args);
+  KillCommand(string &cmd_without_changes, string &cmd, vector<string> &args);
   virtual ~KillCommand() {}
   void execute() override;
 };
@@ -432,7 +430,7 @@ private:
 public:
   NoStopedJobs(string &cmd) : _cmd_line(cmd)
   {
-    cerr << "smash error: " + _cmd_line + ": there is no stoped jobs to resume" << endl;
+    cerr << "smash error: " + _cmd_line + ": there is no stopped jobs to resume" << endl;
   }
 };
 
