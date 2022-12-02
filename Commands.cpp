@@ -955,78 +955,69 @@ FareCommand::FareCommand(string &cmd_without_changes, string &cmd, vector<string
 
 void FareCommand::execute()
 {
-  fstream file;
-  file.open(_file_name, ios::in);
-  if (!file.is_open())
+  ifstream read_file(_file_name);
+  int count = 0;
+  if (!read_file)
   {
     perror("smash error: open failed");
     return;
   }
   string line;
-  vector<string> lines;
-  while (getline(file, line))
+  for (char ch; read_file.get(ch); line.push_back(ch))
   {
-    lines.push_back(line);
   }
-  file.close();
-  int fd = open(_file_name.c_str(), O_WRONLY | O_TRUNC);
-  if (fd == -1)
+  int size_copy = line.size();
+  char buff_line_copy[size_copy];
+  strcpy(buff_line_copy, line.c_str());
+  auto pos = line.find(_source);
+  while (pos != string::npos)
+  {
+    line.replace(pos, _source.length(), _destination);
+    count++;
+    pos = line.find(_source, pos + _destination.length());
+  }
+  read_file.close();
+
+  int write_fd = open(_file_name.c_str(), O_WRONLY | O_TRUNC);
+  if (write_fd < 0)
   {
     perror("smash error: open failed");
     return;
   }
-  int count = 0;
-  for (string l : lines)
+  int size = line.size();
+  char buff_line[size];
+  strcpy(buff_line, line.c_str());
+  if (write(write_fd, buff_line, size) != size)
   {
-    if (l.find(_source) != string::npos)
+    int set_beck_fd = open(_file_name.c_str(), O_WRONLY | O_TRUNC);
+    if (set_beck_fd < 0)
     {
-      int pos = 0;
-      while (true)
-      {
-        pos = l.find(_source, pos);
-        if (pos == string::npos)
-        {
-          break;
-        }
-        l.erase(pos, _source.size());
-        l.insert(pos, _destination);
-        pos += _destination.size();
-        count++;
-      }
-    }
-    if (write(fd, l.c_str(), l.size()) == -1)
-    {
-      perror("smash error: write failed");
-      int fd2 = open(_file_name.c_str(), O_WRONLY | O_TRUNC);
-      if (fd2 == -1)
-      {
-        perror("smash error: open failed");
-        return;
-      }
-      for (string l2 : lines)
-      {
-        if (write(fd2, l2.c_str(), l2.size()) == -1)
-        {
-          perror("smash error: write failed");
-        }
-      }
-      if (close(fd2) == -1)
-      {
-        perror("smash error: close failed");
-      }
-      if (close(fd) == -1)
-      {
-        perror("smash error: close failed");
-      }
+      perror("smash error: open failed");
       return;
     }
+    if (write(set_beck_fd, buff_line_copy, size_copy) != size_copy)
+    {
+      perror("smash error: write failed");
+    }
+    if (close(set_beck_fd) < 0)
+    {
+      perror("smash error: close failed");
+      return;
+    }
+    if (close(write_fd) < 0)
+    {
+      perror("smash error: close failed");
+      return;
+    }
+    return;
   }
-  if (close(fd) == -1)
+  if (close(write_fd) < 0)
   {
     perror("smash error: close failed");
     return;
   }
   cout << "replaced " << count << " instances of the string " << '\"' << _source << '\"' << endl;
+  return;
 }
 
 SetcoreCommand::SetcoreCommand(string &cmd_without_changes, string &cmd, vector<string> &args) : BuiltInCommand(cmd_without_changes), _cmd(cmd), _args(args), _core_num(-1), _job_id(-1)
