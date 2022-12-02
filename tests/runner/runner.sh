@@ -34,12 +34,18 @@ for test in $TESTS_GLOB; do
     done
     test=$(basename -- "$test" .txt)
     echo Running test "$test"
+    if [ "$test" = "test_fare" ]; then
+        ulimit -S -f 4
+    fi
     if [ $VALGRIND -eq 0 ] ; then 
         $RUNNER $SMASH < $TESTS_INPUT/$test.txt > $TESTS_OUTPUT/$test.out 2>$TESTS_OUTPUT/$test.err &
     else
         $RUNNER $VALGRIND_PATH --leak-check=full --show-reachable=yes --num-callers=20 \
         --track-fds=yes --log-file=$TESTS_OUTPUT/$test.valgrind --child-silent-after-fork=yes \
         $SMASH < $TESTS_INPUT/$test.txt > $TESTS_OUTPUT/$test.out 2>$TESTS_OUTPUT/$test.err &
+    fi
+    if [ "$test" = "test_fare" ]; then
+        ulimit unlimited
     fi
 done
 

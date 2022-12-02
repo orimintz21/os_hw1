@@ -751,11 +751,11 @@ void RedirectionCommand::execute()
   int fd;
   if (_append)
   {
-    fd = open(_file_name.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0777);
+    fd = open(_file_name.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0655);
   }
   else
   {
-    fd = open(_file_name.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0777);
+    fd = open(_file_name.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0655);
   }
   if (fd == -1)
   {
@@ -969,8 +969,8 @@ void FareCommand::execute()
     lines.push_back(line);
   }
   file.close();
-  file.open(_file_name, ios::out | ios::trunc);
-  if (!file.is_open())
+  int fd = open(_file_name.c_str(), O_WRONLY | O_TRUNC);
+  if (fd == -1)
   {
     perror("smash error: open failed");
     return;
@@ -994,10 +994,39 @@ void FareCommand::execute()
         count++;
       }
     }
-    file << l << endl;
+    if (write(fd, l.c_str(), l.size()) == -1)
+    {
+      perror("smash error: write failed");
+      int fd2 = open(_file_name.c_str(), O_WRONLY | O_TRUNC);
+      if (fd2 == -1)
+      {
+        perror("smash error: open failed");
+        return;
+      }
+      for (string l2 : lines)
+      {
+        if (write(fd2, l2.c_str(), l2.size()) == -1)
+        {
+          perror("smash error: write failed");
+        }
+      }
+      if (close(fd2) == -1)
+      {
+        perror("smash error: close failed");
+      }
+      if (close(fd) == -1)
+      {
+        perror("smash error: close failed");
+      }
+      return;
+    }
   }
-  file.close();
-  cout << count << " lines were changed" << endl;
+  if (close(fd) == -1)
+  {
+    perror("smash error: close failed");
+    return;
+  }
+  cout << "replaced " << count << " instances of the string " << '\"' << _source << '\"' << endl;
 }
 
 SetcoreCommand::SetcoreCommand(string &cmd_without_changes, string &cmd, vector<string> &args) : BuiltInCommand(cmd_without_changes), _cmd(cmd), _args(args), _core_num(-1), _job_id(-1)

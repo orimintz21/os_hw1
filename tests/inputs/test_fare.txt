@@ -1,0 +1,18 @@
+fare fare_test1.tmp a
+fare fare_test1.tmp 
+fare fare_test1.tmp a a a
+fare fare_test1.tmp a aa
+echo aa > fare_test.tmp
+fare fare_test.tmp a aa
+fare fare_test.tmp a aa
+fare fare_test.tmp a aa
+fare fare_test.tmp a aa
+fare fare_test.tmp a aa
+fare fare_test.tmp a aa
+fare fare_test.tmp a aa
+fare fare_test.tmp a aa
+fare fare_test.tmp a aa
+fare fare_test.tmp a aa
+fare fare_test.tmp a bb
+cat fare_test.tmp
+quit
