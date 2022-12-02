@@ -953,32 +953,9 @@ FareCommand::FareCommand(string &cmd_without_changes, string &cmd, vector<string
   _destination = _args[3];
 }
 
-void FareCommand::execute()
+void FareCommandWrite(string &file_name, string &line, int size_copy, char *buff_line_copy, int count, string &source)
 {
-  ifstream read_file(_file_name);
-  int count = 0;
-  if (!read_file)
-  {
-    perror("smash error: open failed");
-    return;
-  }
-  string line;
-  for (char ch; read_file.get(ch); line.push_back(ch))
-  {
-  }
-  int size_copy = line.size();
-  char buff_line_copy[size_copy];
-  strcpy(buff_line_copy, line.c_str());
-  auto pos = line.find(_source);
-  while (pos != string::npos)
-  {
-    line.replace(pos, _source.length(), _destination);
-    count++;
-    pos = line.find(_source, pos + _destination.length());
-  }
-  read_file.close();
-
-  int write_fd = open(_file_name.c_str(), O_WRONLY | O_TRUNC);
+  int write_fd = open(file_name.c_str(), O_WRONLY | O_TRUNC);
   if (write_fd < 0)
   {
     perror("smash error: open failed");
@@ -989,7 +966,7 @@ void FareCommand::execute()
   strcpy(buff_line, line.c_str());
   if (write(write_fd, buff_line, size) != size)
   {
-    int set_beck_fd = open(_file_name.c_str(), O_WRONLY | O_TRUNC);
+    int set_beck_fd = open(file_name.c_str(), O_WRONLY | O_TRUNC);
     if (set_beck_fd < 0)
     {
       perror("smash error: open failed");
@@ -1016,8 +993,35 @@ void FareCommand::execute()
     perror("smash error: close failed");
     return;
   }
-  cout << "replaced " << count << " instances of the string " << '\"' << _source << '\"' << endl;
+  cout << "replaced " << count << " instances of the string " << '\"' << source << '\"' << endl;
   return;
+}
+
+void FareCommand::execute()
+{
+  ifstream read_file(_file_name);
+  int count = 0;
+  if (!read_file)
+  {
+    perror("smash error: open failed");
+    return;
+  }
+  string line;
+  for (char ch; read_file.get(ch); line.push_back(ch))
+  {
+  }
+  int size_copy = line.size();
+  char buff_line_copy[size_copy];
+  strcpy(buff_line_copy, line.c_str());
+  auto pos = line.find(_source);
+  while (pos != string::npos)
+  {
+    line.replace(pos, _source.length(), _destination);
+    count++;
+    pos = line.find(_source, pos + _destination.length());
+  }
+  read_file.close();
+  FareCommandWrite(_file_name, line, size_copy, buff_line_copy, count, _source);
 }
 
 SetcoreCommand::SetcoreCommand(string &cmd_without_changes, string &cmd, vector<string> &args) : BuiltInCommand(cmd_without_changes), _cmd(cmd), _args(args), _core_num(-1), _job_id(-1)
