@@ -997,30 +997,42 @@ void FareCommandWrite(string &file_name, string &line, int size_copy, char *buff
   return;
 }
 
-void FareCommand::execute()
+int FareCommandRead(string &file_name, string &line)
 {
-  ifstream read_file(_file_name);
-  int count = 0;
+  ifstream read_file(file_name);
   if (!read_file)
   {
     perror("smash error: open failed");
-    return;
+    return -1;
   }
-  string line;
-  for (char ch; read_file.get(ch); line.push_back(ch))
+  char ch;
+  while (read_file.get(ch))
   {
+    line.push_back(ch);
+  }
+  read_file.close();
+  return 0;
+}
+
+void FareCommand::execute()
+{
+  string line;
+  if (FareCommandRead(_file_name, line) == -1)
+  {
+    return;
   }
   int size_copy = line.size();
   char buff_line_copy[size_copy];
   strcpy(buff_line_copy, line.c_str());
   auto pos = line.find(_source);
+
+  int count = 0;
   while (pos != string::npos)
   {
     line.replace(pos, _source.length(), _destination);
     count++;
     pos = line.find(_source, pos + _destination.length());
   }
-  read_file.close();
   FareCommandWrite(_file_name, line, size_copy, buff_line_copy, count, _source);
 }
 
