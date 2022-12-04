@@ -202,7 +202,12 @@ void JobsList::removeFinishedJobs()
 {
   for (auto it = _jobs.begin(); it != _jobs.end();)
   {
-    if (waitpid(it->second.getPid(), NULL, WNOHANG) != 0)
+    auto wait_stat = waitpid(it->second.getPid(), NULL, WNOHANG);
+    if (wait_stat == -1)
+    {
+      perror("smash error: waitpid failed");
+    }
+    else if (wait_stat != 0)
     {
       it = _jobs.erase(it);
     }
@@ -591,7 +596,10 @@ void ForegroundCommand::execute()
     SmallShell::getInstance().setCurrentCmdPid(_job->getPid());
     SmallShell::getInstance().setCurrentJobId(_job_id);
     SmallShell::getInstance().removeJobById(_job_id);
-    waitpid(_job->getPid(), NULL, WUNTRACED);
+    if (waitpid(_job->getPid(), nullptr, WUNTRACED) == -1)
+    {
+      perror("smash error: waitpid failed");
+    }
     SmallShell::getInstance().setCurrentCmdPid(-1);
     SmallShell::getInstance().setCurrentCmd(nullptr);
     SmallShell::getInstance().setCurrentJobId(-1);
@@ -689,7 +697,7 @@ void ExternalCommand::execute()
       string bash_cmd = "/bin/bash";
       if (execl(bash_cmd.c_str(), bash_cmd.c_str(), "-c", _cmd.c_str(), NULL) == -1)
       {
-        perror("smash error: execv failed");
+        perror("smash error: exec* failed");
         exit(1);
       }
     }
@@ -704,7 +712,7 @@ void ExternalCommand::execute()
 
       if (execvp(_args[0].c_str(), const_cast<char *const *>(all_args.data())) == -1)
       {
-        perror("smash error: execv failed");
+        perror("smash error: exec* failed");
         exit(1);
       }
     }
@@ -727,7 +735,10 @@ void ExternalCommand::execute()
       SmallShell::getInstance().setCurrentCmd(this);
       SmallShell::getInstance().setCurrentCmdPid(this->getPid());
       SmallShell::getInstance().setCurrentJobId(-1);
-      waitpid(pid, NULL, WUNTRACED);
+      if (waitpid(pid, nullptr, WUNTRACED) == -1)
+      {
+        perror("smash error: waitpid failed");
+      }
       SmallShell::getInstance().setCurrentCmd(nullptr);
       SmallShell::getInstance().setCurrentCmdPid(-1);
       SmallShell::getInstance().setCurrentJobId(-1);
@@ -856,7 +867,10 @@ void PipeCommand::execute()
       }
       dup2(out, STDOUT_FILENO);
     }
-    wait(NULL);
+    if (wait(NULL) == -1)
+    {
+      perror("smash error: wait failed");
+    }
     if (cmd != nullptr)
     {
       cmd->execute();
