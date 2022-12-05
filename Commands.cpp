@@ -296,7 +296,7 @@ SmallShell::~SmallShell()
 /**
  * Creates and returns a pointer to Command class which matches the given command line (cmd_line)
  */
-Command *SmallShell::CreateCommand(const char *cmd_line, bool is_pipe)
+Command *SmallShell::CreateCommand(const char *cmd_line)
 {
   if (cmd_line == nullptr)
   {
@@ -382,7 +382,7 @@ Command *SmallShell::CreateCommand(const char *cmd_line, bool is_pipe)
     {
       cmd += "&";
     }
-    return new ExternalCommand(cmd_without_changes, cmd, args, inBackground && !is_pipe);
+    return new ExternalCommand(cmd_without_changes, cmd, args, inBackground);
   }
   return nullptr;
 }
@@ -775,47 +775,25 @@ RedirectionCommand::RedirectionCommand(string &cmd, vector<string> &args1, strin
 void RedirectionCommand::execute()
 {
   int st_output_fd = dup(STDOUT_FILENO);
-  if (st_output_fd == -1)
-  {
-    perror("smash error: dup failed");
-    return;
-  }
-  if (close(STDOUT_FILENO) == -1)
-  {
-    perror("smash error: close failed");
-    return;
-  }
+  close(STDOUT_FILENO);
   int fd;
   if (_append)
   {
     fd = open(_file_name.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0655);
-    if (fd == -1)
-    {
-      perror("smash error: open failed");
-      return;
-    }
   }
   else
   {
     fd = open(_file_name.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0655);
-    if (fd == -1)
-    {
-      perror("smash error: open failed");
-      return;
-    }
   }
   if (fd == -1)
   {
     perror("smash error: open failed");
-    if (dup2(st_output_fd, STDOUT_FILENO) == -1)
-    {
-      perror("smash error: dup2 failed");
-    }
+    dup2(st_output_fd, STDOUT_FILENO);
     return;
   }
   try
   {
-    Command *cmd = SmallShell::getInstance().CreateCommand(_cmd1.c_str(), true);
+    Command *cmd = SmallShell::getInstance().CreateCommand(_cmd1.c_str());
     if (cmd == nullptr)
     {
       throw InvalidArguments(_cmd1);
@@ -825,14 +803,8 @@ void RedirectionCommand::execute()
   catch (CommandException &e)
   {
   }
-  if (close(fd) == -1)
-  {
-    perror("smash error: close failed");
-  }
-  if (dup2(st_output_fd, STDOUT_FILENO) == -1)
-  {
-    perror("smash error: dup2 failed");
-  }
+  close(fd);
+  dup2(st_output_fd, STDOUT_FILENO);
 }
 
 PipeCommand::PipeCommand(string &cmd, vector<string> &args1, string &cmd1, vector<string> args2, string &cmd2, bool is_err) : Command(cmd), _args1(args1), _cmd1(cmd1), _args2(args2), _cmd2(cmd2), _is_err(is_err)
@@ -935,7 +907,7 @@ void PipeCommand::execute()
     }
     try
     {
-      Command *cmd = SmallShell::getInstance().CreateCommand(_cmd1.c_str(), true);
+      Command *cmd = SmallShell::getInstance().CreateCommand(_cmd1.c_str());
       cmd->execute();
     }
     catch (CommandException &e)
@@ -960,7 +932,7 @@ void PipeCommand::execute()
       }
       try
       {
-        cmd = SmallShell::getInstance().CreateCommand(_cmd2.c_str(), true);
+        cmd = SmallShell::getInstance().CreateCommand(_cmd2.c_str());
       }
       catch (CommandException &e)
       {
@@ -980,7 +952,7 @@ void PipeCommand::execute()
       }
       try
       {
-        cmd = SmallShell::getInstance().CreateCommand(_cmd2.c_str(), true);
+        cmd = SmallShell::getInstance().CreateCommand(_cmd2.c_str());
       }
       catch (CommandException &e)
       {
