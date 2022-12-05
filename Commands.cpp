@@ -198,6 +198,19 @@ void JobsList::killAllJobs()
   removeFinishedJobs();
 }
 
+void JobsList::killAllJobsWithoutPrint()
+{
+  removeFinishedJobs();
+  for (auto cm : _jobs)
+  {
+    if (kill(cm.second.getPid(), SIGKILL) == -1)
+    {
+      perror("smash error: kill failed");
+    }
+  }
+  removeFinishedJobs();
+}
+
 void JobsList::removeFinishedJobs()
 {
   for (auto it = _jobs.begin(); it != _jobs.end();)
@@ -670,6 +683,10 @@ void QuitCommand::execute()
   {
     SmallShell::getInstance().killAllJobs();
   }
+  else
+  {
+    SmallShell::getInstance().killAllJobsWithoutPrint();
+  }
   exit(0);
 }
 
@@ -697,7 +714,7 @@ void ExternalCommand::execute()
       string bash_cmd = "/bin/bash";
       if (execl(bash_cmd.c_str(), bash_cmd.c_str(), "-c", _cmd.c_str(), NULL) == -1)
       {
-        perror("smash error: exec* failed");
+        perror("smash error: execl failed");
         exit(1);
       }
     }
@@ -712,7 +729,7 @@ void ExternalCommand::execute()
 
       if (execvp(_args[0].c_str(), const_cast<char *const *>(all_args.data())) == -1)
       {
-        perror("smash error: exec* failed");
+        perror("smash error: execvp failed");
         exit(1);
       }
     }
@@ -797,38 +814,97 @@ void PipeCommand::execute()
 {
   int fd[2];
   int in = dup(STDIN_FILENO);
+  if (in == -1)
+  {
+    perror("smash error: dup failed");
+    return;
+  }
   int out = -1;
   if (_is_err)
   {
     out = dup(STDERR_FILENO);
-    close(STDERR_FILENO);
+    if (out == -1)
+    {
+      perror("smash error: dup failed");
+      return;
+    }
+    if (close(STDERR_FILENO) == -1)
+    {
+      perror("smash error: close failed");
+      return;
+    }
   }
   else
   {
     out = dup(STDOUT_FILENO);
-    close(STDOUT_FILENO);
+    if (out == -1)
+    {
+      perror("smash error: dup failed");
+      return;
+    }
+    if (close(STDOUT_FILENO) == -1)
+    {
+      perror("smash error: close failed");
+      return;
+    }
   }
-  close(STDIN_FILENO);
-  pipe(fd);
+  if (close(STDIN_FILENO) == -1)
+  {
+    perror("smash error: close failed");
+    return;
+  }
+  if (pipe(fd) == -1)
+  {
+    perror("smash error: pipe failed");
+    return;
+  }
   if (fd[0] != 0)
   {
-    dup2(fd[0], 0);
-    close(fd[0]);
+    if (dup2(fd[0], 0) == -1)
+    {
+      perror("smash error: dup2 failed");
+      return;
+    }
+    if (close(fd[0]) == -1)
+    {
+      perror("smash error: close failed");
+      return;
+    }
   }
   if (_is_err && fd[1] != 2)
   {
-    dup2(fd[1], 2);
-    close(fd[1]);
+    if (dup2(fd[1], 2) == -1)
+    {
+      perror("smash error: dup2 failed");
+      return;
+    }
+    if (close(fd[1]) == -1)
+    {
+      perror("smash error: close failed");
+      return;
+    }
   }
   else if (!_is_err && fd[1] != 1)
   {
-    dup2(fd[1], 1);
-    close(fd[1]);
+    if (dup2(fd[1], 1) == -1)
+    {
+      perror("smash error: dup2 failed");
+      return;
+    }
+    if (close(fd[1]) == -1)
+    {
+      perror("smash error: close failed");
+      return;
+    }
   }
 
   if (fork() == 0)
   {
-    close(0);
+    if (close(0) == -1)
+    {
+      perror("smash error: close failed");
+      return;
+    }
     try
     {
       Command *cmd = SmallShell::getInstance().CreateCommand(_cmd1.c_str());
@@ -837,7 +913,11 @@ void PipeCommand::execute()
     catch (CommandException &e)
     {
     }
-    dup2(in, 0);
+    if (dup2(in, 0) == -1)
+    {
+      perror("smash error: dup2 failed");
+      return;
+    }
     exit(0);
   }
   else
@@ -845,7 +925,11 @@ void PipeCommand::execute()
     Command *cmd = nullptr;
     if (_is_err)
     {
-      close(2);
+      if (close(2) == -1)
+      {
+        perror("smash error: close failed");
+        return;
+      }
       try
       {
         cmd = SmallShell::getInstance().CreateCommand(_cmd2.c_str());
@@ -853,11 +937,19 @@ void PipeCommand::execute()
       catch (CommandException &e)
       {
       }
-      dup2(out, STDERR_FILENO);
+      if (dup2(out, STDERR_FILENO) == -1)
+      {
+        perror("smash error: dup2 failed");
+        return;
+      }
     }
     else
     {
-      close(1);
+      if (close(1) == -1)
+      {
+        perror("smash error: close failed");
+        return;
+      }
       try
       {
         cmd = SmallShell::getInstance().CreateCommand(_cmd2.c_str());
@@ -865,7 +957,11 @@ void PipeCommand::execute()
       catch (CommandException &e)
       {
       }
-      dup2(out, STDOUT_FILENO);
+      if (dup2(out, STDOUT_FILENO) == -1)
+      {
+        perror("smash error: dup2 failed");
+        return;
+      }
     }
     if (wait(NULL) == -1)
     {
@@ -876,8 +972,16 @@ void PipeCommand::execute()
       cmd->execute();
     }
   }
-  close(0);
-  dup2(in, STDIN_FILENO);
+  if (close(0) == -1)
+  {
+    perror("smash error: close failed");
+    return;
+  }
+  if (dup2(in, STDIN_FILENO) == -1)
+  {
+    perror("smash error: dup2 failed");
+    return;
+  }
 }
 
 KillCommand::KillCommand(string &cmd_without_changes, string &cmd, vector<string> &args) : BuiltInCommand(cmd_without_changes), _cmd(cmd), _sig_num(-1), _job_id(-1)
@@ -898,21 +1002,7 @@ KillCommand::KillCommand(string &cmd_without_changes, string &cmd, vector<string
   {
     throw InvalidArguments(args[0]);
   }
-  // for (int i = 1; i < args[1].size(); i++)
-  // {
-  //   if (!isdigit(args[1][i]))
-  //   {
-  //     throw InvalidArguments(args[0]);
-  //   }
-  // }
   _sig_num = stoi(args[1].substr(1));
-  // for (int i = 0; i < args[2].size(); i++)
-  // {
-  //   if (!isdigit(args[2][i]))
-  //   {
-  //     throw InvalidArguments(args[0]);
-  //   }
-  // }
   try
   {
     _job_id = stoi(args[2]);

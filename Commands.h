@@ -151,8 +151,8 @@ public:
   {
     // TODO: Add your data members
     int _job_id;
-    pid_t _pid;
     string _command;
+    pid_t _pid;
     bool _isStopped;
     time_t _start_time;
     Command *_cmd;
@@ -178,6 +178,7 @@ public:
   void addJobWithId(Command *cmd, int id, bool isStopped = false);
   void printJobsList();
   void killAllJobs();
+  void killAllJobsWithoutPrint();
   void removeFinishedJobs();
   JobEntry *getJobById(int jobId);
   void removeJobById(int jobId);
@@ -314,6 +315,7 @@ public:
   JobsList::JobEntry *getLastStoppedJob(int *job_id) { return _jobsList.getLastStoppedJob(job_id); }
   void removeJobById(int job_id) { _jobsList.removeJobById(job_id); }
   void killAllJobs() { _jobsList.killAllJobs(); }
+  void killAllJobsWithoutPrint() { _jobsList.killAllJobsWithoutPrint(); }
   void addJob(Command *cmd, bool isStopped = false) { _jobsList.addJob(cmd, isStopped); }
   void addJobWihId(Command *cmd, int id, bool isStopped = false) { _jobsList.addJobWithId(cmd, id, isStopped); }
   string setFullCmd(string &cmd);
