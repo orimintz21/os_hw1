@@ -366,7 +366,7 @@ private:
 public:
   DefaultError(string &cmd) : _cmd_line(cmd)
   {
-    cerr << "smash error: " + _cmd_line << endl;
+    cerr << "smash error:> \"" + _cmd_line << "\"" << endl;
   }
 };
 
@@ -404,6 +404,10 @@ public:
   JobDoesNotExist(string cmd, int job_id) : _cmd_line(cmd), _job_id(job_id)
   {
     cerr << "smash error: " + _cmd_line + ": job-id " + to_string(_job_id) + " does not exist" << endl;
+  }
+  JobDoesNotExist(string cmd, string job_id) : _cmd_line(cmd), _job_id(-1)
+  {
+    cerr << "smash error: " + _cmd_line + ": job-id " + job_id + " does not exist" << endl;
   }
 };
 

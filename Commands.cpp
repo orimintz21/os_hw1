@@ -389,15 +389,12 @@ Command *SmallShell::CreateCommand(const char *cmd_line)
 
 void SmallShell::executeCommand(const char *cmd_line)
 {
-  // TODO: Add your implementation here
-  // for example:
   Command *cmd = CreateCommand(cmd_line);
   if (cmd == nullptr)
   {
     return;
   }
   cmd->execute();
-  // Please note that you must fork smash process for some commands (e.g., external commands....)
 }
 
 string &SmallShell::getPrompt()
@@ -454,6 +451,16 @@ string SmallShell::setFullCmd(string &cmd)
   return ans;
 }
 
+JobsList::JobEntry *SmallShell::getLastJobId(int *job_id)
+{
+  return _jobsList.getLastJob(job_id);
+}
+
+JobsList::JobEntry *SmallShell::getJobById(int job_id)
+{
+  return _jobsList.getJobById(job_id);
+}
+
 ChpromptCommand::ChpromptCommand(string &cmd_without_changes, string cmd_line, vector<string> &args) : BuiltInCommand(cmd_line)
 {
   if (args.size() == 1)
@@ -465,17 +472,6 @@ ChpromptCommand::ChpromptCommand(string &cmd_without_changes, string cmd_line, v
     _newPrompt = args[1];
   }
 }
-
-JobsList::JobEntry *SmallShell::getLastJobId(int *job_id)
-{
-  return _jobsList.getLastJob(job_id);
-}
-
-JobsList::JobEntry *SmallShell::getJobById(int job_id)
-{
-  return _jobsList.getJobById(job_id);
-}
-
 void ChpromptCommand::execute()
 {
   SmallShell::getInstance().setPrompt(_newPrompt);
@@ -505,7 +501,7 @@ ChangeDirCommand::ChangeDirCommand(string &cmd_without_changes, string cmd_line,
 {
   if (args.size() == 1)
   {
-    throw InvalidArguments(args[0]);
+    throw DefaultError(cmd_without_changes);
   }
   else if (args.size() == 2)
   {
@@ -527,7 +523,7 @@ ChangeDirCommand::ChangeDirCommand(string &cmd_without_changes, string cmd_line,
     }
     _dir = temp;
   }
-  else
+  else if (args.size() > 2)
   {
     throw TooManyArguments(args[0]);
   }
@@ -537,11 +533,6 @@ void ChangeDirCommand::execute()
   if (chdir(_dir.c_str()) == 0)
   {
     SmallShell::getInstance().goToDir(_dir);
-    if (_args[1] == "-")
-    {
-      // string temp = SmallShell::getInstance().getCurrentDir();
-      // SmallShell::getInstance().setPreDir(temp);
-    }
     char *pwd = getcwd(NULL, 0);
     string current_dir = pwd;
     free(pwd);
@@ -570,10 +561,7 @@ ForegroundCommand::ForegroundCommand(string &cmd_without_changes, string cmd_lin
     }
     _job = SmallShell::getInstance().getLastJobId(&_job_id);
   }
-  else if (args.size() > 2)
-  {
-    throw InvalidArguments(args[0]);
-  }
+
   else
   {
     try
@@ -582,41 +570,42 @@ ForegroundCommand::ForegroundCommand(string &cmd_without_changes, string cmd_lin
     }
     catch (const std::invalid_argument &ia)
     {
-      throw InvalidArguments(args[0]);
+      throw JobDoesNotExist(args[0], args[1]);
     }
     _job = SmallShell::getInstance().getJobById(_job_id);
+    if (_job == nullptr)
+    {
+      throw JobDoesNotExist(args[0], args[1]);
+    }
+    if (args.size() > 2)
+    {
+      throw InvalidArguments(args[0]);
+    }
   }
 }
 
 void ForegroundCommand::execute()
 {
-  if (_job == nullptr)
+  if (_job->isStopped())
   {
-    throw JobDoesNotExist(string("fg"), _job_id);
+    _job->setStopped(false);
+    if (kill(_job->getPid(), SIGCONT) == -1)
+    {
+      perror("smash error: kill failed");
+    }
   }
-  else
+  cout << _job->getCommand() << " : " << _job->getPid() << endl;
+  SmallShell::getInstance().setCurrentCmd(_job->getCmd());
+  SmallShell::getInstance().setCurrentCmdPid(_job->getPid());
+  SmallShell::getInstance().setCurrentJobId(_job_id);
+  SmallShell::getInstance().removeJobById(_job_id);
+  if (waitpid(_job->getPid(), nullptr, WUNTRACED) == -1)
   {
-    if (_job->isStopped())
-    {
-      _job->setStopped(false);
-      if (kill(_job->getPid(), SIGCONT) == -1)
-      {
-        perror("smash error: kill failed");
-      }
-    }
-    cout << _job->getCommand() << " : " << _job->getPid() << endl;
-    SmallShell::getInstance().setCurrentCmd(_job->getCmd());
-    SmallShell::getInstance().setCurrentCmdPid(_job->getPid());
-    SmallShell::getInstance().setCurrentJobId(_job_id);
-    SmallShell::getInstance().removeJobById(_job_id);
-    if (waitpid(_job->getPid(), nullptr, WUNTRACED) == -1)
-    {
-      perror("smash error: waitpid failed");
-    }
-    SmallShell::getInstance().setCurrentCmdPid(-1);
-    SmallShell::getInstance().setCurrentCmd(nullptr);
-    SmallShell::getInstance().setCurrentJobId(-1);
+    perror("smash error: waitpid failed");
   }
+  SmallShell::getInstance().setCurrentCmdPid(-1);
+  SmallShell::getInstance().setCurrentCmd(nullptr);
+  SmallShell::getInstance().setCurrentJobId(-1);
 }
 
 BackgroundCommand::BackgroundCommand(string &cmd_without_changes, string cmd_line, vector<string> &args) : BuiltInCommand(cmd_without_changes)
@@ -630,7 +619,7 @@ BackgroundCommand::BackgroundCommand(string &cmd_without_changes, string cmd_lin
       throw NoStopedJobs(args[0]);
     }
   }
-  else if (args.size() == 2)
+  else
   {
     try
     {
@@ -638,7 +627,7 @@ BackgroundCommand::BackgroundCommand(string &cmd_without_changes, string cmd_lin
     }
     catch (std::invalid_argument &e)
     {
-      throw InvalidArguments(args[0]);
+      throw JobDoesNotExist(args[0], args[1]);
     }
     _job = SmallShell::getInstance().getJobById(_job_id);
     if (!_job)
@@ -649,10 +638,10 @@ BackgroundCommand::BackgroundCommand(string &cmd_without_changes, string cmd_lin
     {
       throw AlreadyRunningInBackground(args[0], _job_id);
     }
-  }
-  if (args.size() > 2)
-  {
-    throw InvalidArguments(args[0]);
+    if (args.size() > 2)
+    {
+      throw InvalidArguments(args[0]);
+    }
   }
 }
 
@@ -986,11 +975,32 @@ void PipeCommand::execute()
 
 KillCommand::KillCommand(string &cmd_without_changes, string &cmd, vector<string> &args) : BuiltInCommand(cmd_without_changes), _cmd(cmd), _sig_num(-1), _job_id(-1)
 {
-  if (args.size() != 3)
+  // if (args.size() != 3)
+  // {
+  //   throw InvalidArguments(args[0]);
+  // }
+  // if (args[1].size() < 2 || args[1][0] != '-')
+  // {
+  //   throw InvalidArguments(args[0]);
+  // }
+  if (args.size() < 3)
   {
     throw InvalidArguments(args[0]);
   }
-  if (args[1].size() < 2 || args[1][0] != '-')
+
+  try
+  {
+    _job_id = stoi(args[2]);
+  }
+  catch (invalid_argument &e)
+  {
+    throw JobDoesNotExist(args[0], args[2]);
+  }
+  if (!SmallShell::getInstance().getJobById(_job_id))
+  {
+    throw JobDoesNotExist(args[0], args[2]);
+  }
+  if (args[1][0] != '-')
   {
     throw InvalidArguments(args[0]);
   }
@@ -1002,12 +1012,7 @@ KillCommand::KillCommand(string &cmd_without_changes, string &cmd, vector<string
   {
     throw InvalidArguments(args[0]);
   }
-  _sig_num = stoi(args[1].substr(1));
-  try
-  {
-    _job_id = stoi(args[2]);
-  }
-  catch (invalid_argument &e)
+  if (args.size() > 3)
   {
     throw InvalidArguments(args[0]);
   }
@@ -1016,15 +1021,7 @@ KillCommand::KillCommand(string &cmd_without_changes, string &cmd, vector<string
 void KillCommand::execute()
 {
   JobsList::JobEntry *job = SmallShell::getInstance().getJobById(_job_id);
-  if (job == nullptr)
-  {
-    throw JobDoesNotExist("kill", _job_id);
-  }
-  if (_sig_num < 1 || _sig_num > 31)
-  {
-    string a = "kill";
-    throw InvalidArguments(a);
-  }
+
   if (SIGCONT == _sig_num)
   {
     if (job->isStopped())
@@ -1142,6 +1139,26 @@ void FareCommand::execute()
 
 SetcoreCommand::SetcoreCommand(string &cmd_without_changes, string &cmd, vector<string> &args) : BuiltInCommand(cmd_without_changes), _cmd(cmd), _args(args), _core_num(-1), _job_id(-1)
 {
+  if (args.size() < 2)
+  {
+    throw InvalidArguments(args[0]);
+  }
+  // if (args.size() != 3)
+  // {
+  //   throw InvalidArguments(args[0]);
+  // }
+  try
+  {
+    _job_id = stoi(args[1]);
+  }
+  catch (invalid_argument &e)
+  {
+    throw JobDoesNotExist(args[0], args[1]);
+  }
+  if (!SmallShell::getInstance().getJobById(_job_id))
+  {
+    throw JobDoesNotExist(args[0], args[1]);
+  }
   if (args.size() != 3)
   {
     throw InvalidArguments(args[0]);
@@ -1152,18 +1169,12 @@ SetcoreCommand::SetcoreCommand(string &cmd_without_changes, string &cmd, vector<
   }
   catch (invalid_argument &e)
   {
-    throw InvalidArguments(args[0]);
+    throw InvalidCoreNumber(args[0]);
   }
-  try
+  if (_core_num < 0 || _core_num >= std::thread::hardware_concurrency())
   {
-    _job_id = stoi(args[1]);
+    throw InvalidCoreNumber(args[0]);
   }
-  catch (invalid_argument &e)
-  {
-    throw InvalidArguments(args[0]);
-  }
-  _core_num = stoi(args[2]);
-  _job_id = stoi(args[1]);
 }
 
 void SetcoreCommand::execute()
