@@ -743,8 +743,8 @@
 	"kind" : "cmakeFiles",
 	"paths" : 
 	{
-		"build" : "/home/orimintz21/os/hw1/skeleton_smash/os_hw1/build",
-		"source" : "/home/orimintz21/os/hw1/skeleton_smash/os_hw1"
+		"build" : "/home/orimintz21/os/hw1/skeleton_smash/build",
+		"source" : "/home/orimintz21/os/hw1/skeleton_smash"
 	},
 	"version" : 
 	{

@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/orimintz21/os/hw1/skeleton_smash/os_hw1
+CMAKE_SOURCE_DIR = /home/orimintz21/os/hw1/skeleton_smash
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/orimintz21/os/hw1/skeleton_smash/os_hw1/build
+CMAKE_BINARY_DIR = /home/orimintz21/os/hw1/skeleton_smash/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/skeleton_smash.dir/depend.make
@@ -70,46 +70,46 @@ include CMakeFiles/skeleton_smash.dir/progress.make
 include CMakeFiles/skeleton_smash.dir/flags.make
 
 CMakeFiles/skeleton_smash.dir/smash.cpp.o: CMakeFiles/skeleton_smash.dir/flags.make
-CMakeFiles/skeleton_smash.dir/smash.cpp.o: /home/orimintz21/os/hw1/skeleton_smash/os_hw1/smash.cpp
+CMakeFiles/skeleton_smash.dir/smash.cpp.o: /home/orimintz21/os/hw1/skeleton_smash/smash.cpp
 CMakeFiles/skeleton_smash.dir/smash.cpp.o: CMakeFiles/skeleton_smash.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/orimintz21/os/hw1/skeleton_smash/os_hw1/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/skeleton_smash.dir/smash.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/skeleton_smash.dir/smash.cpp.o -MF CMakeFiles/skeleton_smash.dir/smash.cpp.o.d -o CMakeFiles/skeleton_smash.dir/smash.cpp.o -c /home/orimintz21/os/hw1/skeleton_smash/os_hw1/smash.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/orimintz21/os/hw1/skeleton_smash/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/skeleton_smash.dir/smash.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/skeleton_smash.dir/smash.cpp.o -MF CMakeFiles/skeleton_smash.dir/smash.cpp.o.d -o CMakeFiles/skeleton_smash.dir/smash.cpp.o -c /home/orimintz21/os/hw1/skeleton_smash/smash.cpp
 
 CMakeFiles/skeleton_smash.dir/smash.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/skeleton_smash.dir/smash.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/orimintz21/os/hw1/skeleton_smash/os_hw1/smash.cpp > CMakeFiles/skeleton_smash.dir/smash.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/orimintz21/os/hw1/skeleton_smash/smash.cpp > CMakeFiles/skeleton_smash.dir/smash.cpp.i
 
 CMakeFiles/skeleton_smash.dir/smash.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/skeleton_smash.dir/smash.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/orimintz21/os/hw1/skeleton_smash/os_hw1/smash.cpp -o CMakeFiles/skeleton_smash.dir/smash.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/orimintz21/os/hw1/skeleton_smash/smash.cpp -o CMakeFiles/skeleton_smash.dir/smash.cpp.s
 
 CMakeFiles/skeleton_smash.dir/Commands.cpp.o: CMakeFiles/skeleton_smash.dir/flags.make
-CMakeFiles/skeleton_smash.dir/Commands.cpp.o: /home/orimintz21/os/hw1/skeleton_smash/os_hw1/Commands.cpp
+CMakeFiles/skeleton_smash.dir/Commands.cpp.o: /home/orimintz21/os/hw1/skeleton_smash/Commands.cpp
 CMakeFiles/skeleton_smash.dir/Commands.cpp.o: CMakeFiles/skeleton_smash.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/orimintz21/os/hw1/skeleton_smash/os_hw1/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/skeleton_smash.dir/Commands.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/skeleton_smash.dir/Commands.cpp.o -MF CMakeFiles/skeleton_smash.dir/Commands.cpp.o.d -o CMakeFiles/skeleton_smash.dir/Commands.cpp.o -c /home/orimintz21/os/hw1/skeleton_smash/os_hw1/Commands.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/orimintz21/os/hw1/skeleton_smash/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/skeleton_smash.dir/Commands.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/skeleton_smash.dir/Commands.cpp.o -MF CMakeFiles/skeleton_smash.dir/Commands.cpp.o.d -o CMakeFiles/skeleton_smash.dir/Commands.cpp.o -c /home/orimintz21/os/hw1/skeleton_smash/Commands.cpp
 
 CMakeFiles/skeleton_smash.dir/Commands.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/skeleton_smash.dir/Commands.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/orimintz21/os/hw1/skeleton_smash/os_hw1/Commands.cpp > CMakeFiles/skeleton_smash.dir/Commands.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/orimintz21/os/hw1/skeleton_smash/Commands.cpp > CMakeFiles/skeleton_smash.dir/Commands.cpp.i
 
 CMakeFiles/skeleton_smash.dir/Commands.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/skeleton_smash.dir/Commands.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/orimintz21/os/hw1/skeleton_smash/os_hw1/Commands.cpp -o CMakeFiles/skeleton_smash.dir/Commands.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/orimintz21/os/hw1/skeleton_smash/Commands.cpp -o CMakeFiles/skeleton_smash.dir/Commands.cpp.s
 
 CMakeFiles/skeleton_smash.dir/signals.cpp.o: CMakeFiles/skeleton_smash.dir/flags.make
-CMakeFiles/skeleton_smash.dir/signals.cpp.o: /home/orimintz21/os/hw1/skeleton_smash/os_hw1/signals.cpp
+CMakeFiles/skeleton_smash.dir/signals.cpp.o: /home/orimintz21/os/hw1/skeleton_smash/signals.cpp
 CMakeFiles/skeleton_smash.dir/signals.cpp.o: CMakeFiles/skeleton_smash.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/orimintz21/os/hw1/skeleton_smash/os_hw1/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/skeleton_smash.dir/signals.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/skeleton_smash.dir/signals.cpp.o -MF CMakeFiles/skeleton_smash.dir/signals.cpp.o.d -o CMakeFiles/skeleton_smash.dir/signals.cpp.o -c /home/orimintz21/os/hw1/skeleton_smash/os_hw1/signals.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/orimintz21/os/hw1/skeleton_smash/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/skeleton_smash.dir/signals.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/skeleton_smash.dir/signals.cpp.o -MF CMakeFiles/skeleton_smash.dir/signals.cpp.o.d -o CMakeFiles/skeleton_smash.dir/signals.cpp.o -c /home/orimintz21/os/hw1/skeleton_smash/signals.cpp
 
 CMakeFiles/skeleton_smash.dir/signals.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/skeleton_smash.dir/signals.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/orimintz21/os/hw1/skeleton_smash/os_hw1/signals.cpp > CMakeFiles/skeleton_smash.dir/signals.cpp.i
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/orimintz21/os/hw1/skeleton_smash/signals.cpp > CMakeFiles/skeleton_smash.dir/signals.cpp.i
 
 CMakeFiles/skeleton_smash.dir/signals.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/skeleton_smash.dir/signals.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/orimintz21/os/hw1/skeleton_smash/os_hw1/signals.cpp -o CMakeFiles/skeleton_smash.dir/signals.cpp.s
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/orimintz21/os/hw1/skeleton_smash/signals.cpp -o CMakeFiles/skeleton_smash.dir/signals.cpp.s
 
 # Object files for target skeleton_smash
 skeleton_smash_OBJECTS = \
@@ -125,7 +125,7 @@ skeleton_smash: CMakeFiles/skeleton_smash.dir/Commands.cpp.o
 skeleton_smash: CMakeFiles/skeleton_smash.dir/signals.cpp.o
 skeleton_smash: CMakeFiles/skeleton_smash.dir/build.make
 skeleton_smash: CMakeFiles/skeleton_smash.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/orimintz21/os/hw1/skeleton_smash/os_hw1/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable skeleton_smash"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/orimintz21/os/hw1/skeleton_smash/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable skeleton_smash"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/skeleton_smash.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -137,6 +137,6 @@ CMakeFiles/skeleton_smash.dir/clean:
 .PHONY : CMakeFiles/skeleton_smash.dir/clean
 
 CMakeFiles/skeleton_smash.dir/depend:
-	cd /home/orimintz21/os/hw1/skeleton_smash/os_hw1/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/orimintz21/os/hw1/skeleton_smash/os_hw1 /home/orimintz21/os/hw1/skeleton_smash/os_hw1 /home/orimintz21/os/hw1/skeleton_smash/os_hw1/build /home/orimintz21/os/hw1/skeleton_smash/os_hw1/build /home/orimintz21/os/hw1/skeleton_smash/os_hw1/build/CMakeFiles/skeleton_smash.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/orimintz21/os/hw1/skeleton_smash/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/orimintz21/os/hw1/skeleton_smash /home/orimintz21/os/hw1/skeleton_smash /home/orimintz21/os/hw1/skeleton_smash/build /home/orimintz21/os/hw1/skeleton_smash/build /home/orimintz21/os/hw1/skeleton_smash/build/CMakeFiles/skeleton_smash.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/skeleton_smash.dir/depend
 

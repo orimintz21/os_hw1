@@ -1,4 +1,4 @@
-# Install script for directory: /home/orimintz21/os/hw1/skeleton_smash/os_hw1
+# Install script for directory: /home/orimintz21/os/hw1/skeleton_smash
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/orimintz21/os/hw1/skeleton_smash/os_hw1/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/orimintz21/os/hw1/skeleton_smash/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

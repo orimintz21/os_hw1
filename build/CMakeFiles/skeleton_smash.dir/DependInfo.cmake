@@ -8,9 +8,9 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/orimintz21/os/hw1/skeleton_smash/os_hw1/Commands.cpp" "CMakeFiles/skeleton_smash.dir/Commands.cpp.o" "gcc" "CMakeFiles/skeleton_smash.dir/Commands.cpp.o.d"
-  "/home/orimintz21/os/hw1/skeleton_smash/os_hw1/signals.cpp" "CMakeFiles/skeleton_smash.dir/signals.cpp.o" "gcc" "CMakeFiles/skeleton_smash.dir/signals.cpp.o.d"
-  "/home/orimintz21/os/hw1/skeleton_smash/os_hw1/smash.cpp" "CMakeFiles/skeleton_smash.dir/smash.cpp.o" "gcc" "CMakeFiles/skeleton_smash.dir/smash.cpp.o.d"
+  "/home/orimintz21/os/hw1/skeleton_smash/Commands.cpp" "CMakeFiles/skeleton_smash.dir/Commands.cpp.o" "gcc" "CMakeFiles/skeleton_smash.dir/Commands.cpp.o.d"
+  "/home/orimintz21/os/hw1/skeleton_smash/signals.cpp" "CMakeFiles/skeleton_smash.dir/signals.cpp.o" "gcc" "CMakeFiles/skeleton_smash.dir/signals.cpp.o.d"
+  "/home/orimintz21/os/hw1/skeleton_smash/smash.cpp" "CMakeFiles/skeleton_smash.dir/smash.cpp.o" "gcc" "CMakeFiles/skeleton_smash.dir/smash.cpp.o.d"
   )
 
 # Targets to which this target links.
