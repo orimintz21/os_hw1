@@ -219,16 +219,6 @@ public:
   void execute() override;
 };
 
-// class TimeoutCommand : public BuiltInCommand
-// {
-//   /* Optional */
-//   // TODO: Add your data members
-// public:
-//   explicit TimeoutCommand(const char *cmd_line);
-//   virtual ~TimeoutCommand() {}
-//   void execute() override;
-// };
-
 class FareCommand : public BuiltInCommand
 {
   /* Optional */
@@ -288,7 +278,7 @@ private:
   SmallShell();
 
 public:
-  Command *CreateCommand(const char *cmd_line);
+  Command *CreateCommand(const char *cmd_line, bool is_pipe = false);
   SmallShell(SmallShell const &) = delete;     // disable copy ctor
   void operator=(SmallShell const &) = delete; // disable = operator
   static SmallShell &getInstance()             // make SmallShell singleton
