@@ -55,7 +55,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/orimintz21/os/hw1/skeleton_smash/build"
+			"value" : "/home/orimintz21/os/hw1/skeleton_smash/os_hw1/build"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -543,7 +543,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/orimintz21/os/hw1/skeleton_smash/build/CMakeFiles/pkgRedirects"
+			"value" : "/home/orimintz21/os/hw1/skeleton_smash/os_hw1/build/CMakeFiles/pkgRedirects"
 		},
 		{
 			"name" : "CMAKE_GENERATOR",
@@ -603,7 +603,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/orimintz21/os/hw1/skeleton_smash"
+			"value" : "/home/orimintz21/os/hw1/skeleton_smash/os_hw1"
 		},
 		{
 			"name" : "CMAKE_INSTALL_PREFIX",
@@ -1151,7 +1151,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/orimintz21/os/hw1/skeleton_smash/build"
+			"value" : "/home/orimintz21/os/hw1/skeleton_smash/os_hw1/build"
 		},
 		{
 			"name" : "skeleton_smash_IS_TOP_LEVEL",
@@ -1175,7 +1175,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/orimintz21/os/hw1/skeleton_smash"
+			"value" : "/home/orimintz21/os/hw1/skeleton_smash/os_hw1"
 		}
 	],
 	"kind" : "cache",

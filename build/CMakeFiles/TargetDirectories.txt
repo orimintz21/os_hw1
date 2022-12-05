@@ -1,3 +1,3 @@
-/home/orimintz21/os/hw1/skeleton_smash/build/CMakeFiles/skeleton_smash.dir
-/home/orimintz21/os/hw1/skeleton_smash/build/CMakeFiles/edit_cache.dir
-/home/orimintz21/os/hw1/skeleton_smash/build/CMakeFiles/rebuild_cache.dir
+/home/orimintz21/os/hw1/skeleton_smash/os_hw1/build/CMakeFiles/skeleton_smash.dir
+/home/orimintz21/os/hw1/skeleton_smash/os_hw1/build/CMakeFiles/edit_cache.dir
+/home/orimintz21/os/hw1/skeleton_smash/os_hw1/build/CMakeFiles/rebuild_cache.dir
