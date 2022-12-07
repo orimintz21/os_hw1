@@ -198,19 +198,6 @@ void JobsList::killAllJobs()
   removeFinishedJobs();
 }
 
-void JobsList::killAllJobsWithoutPrint()
-{
-  removeFinishedJobs();
-  for (auto cm : _jobs)
-  {
-    if (kill(cm.second.getPid(), SIGKILL) == -1)
-    {
-      perror("smash error: kill failed");
-    }
-  }
-  removeFinishedJobs();
-}
-
 void JobsList::removeFinishedJobs()
 {
   for (auto it = _jobs.begin(); it != _jobs.end();)
@@ -671,10 +658,6 @@ void QuitCommand::execute()
   if (_kill)
   {
     SmallShell::getInstance().killAllJobs();
-  }
-  else
-  {
-    SmallShell::getInstance().killAllJobsWithoutPrint();
   }
   exit(0);
 }
